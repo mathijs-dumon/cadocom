@@ -1,7 +1,18 @@
 var app = angular.module('cadoCom', [
-    'ui.router',
-    'gifts',
+    'ui.router'
 ]);
+
+app.factory('gifts', ['$http', function($http){
+  var o = {
+    gifts: []
+  };
+  o.getAll = function() {
+    return $http.get('api/gifts/list').success(function(data){
+      angular.copy(data, o.gifts);
+    });
+  };
+  return o;
+}]);
 
 app.controller('MainCtrl', [
 '$scope',
@@ -24,8 +35,14 @@ function($scope, gifts) {
     };
 }]);
 
-require('./gifts/gifts.factory.js');
-require('./gifts/gifts.controller.js');
+app.controller('GiftsCtrl', [
+    '$scope',
+    '$stateParams',
+    'gifts',
+    function($scope, $stateParams, gifts) {
+        $scope.gift = gifts.gifts[$stateParams.id];
+    }
+]);
 
 app.config([
 '$stateProvider',
@@ -34,22 +51,21 @@ function($stateProvider, $urlRouterProvider) {
 
   $stateProvider
     .state('home', {
-        url: '/home',
+        url: '/',
         templateUrl: '/home.html',
-        controller: 'MainCtrl',
+        controller: 'MainCtrl'/*,
         resolve: {
             giftPromise: ['gifts', function(gifts) {
                 return gifts.getAll();
             }]
-        }
+        }*/
     })
     .state('gifts', {
-        url: '/gifts/{id}',
-        templateUrl: '/gifts.html',
+        url: '/gifts',
+        templateUrl: '/gifts/gifts.html',
         controller: 'GiftsCtrl'
     });
 
-  $urlRouterProvider.otherwise('home');
-}
-]);
+    $urlRouterProvider.otherwise('home');
+}]);
 
