@@ -3,44 +3,55 @@ var app = angular.module('cadoCom', [
 ]);
 
 app.factory('gifts', ['$http', function($http){
-  var o = {
-    gifts: []
-  };
-  o.getAll = function() {
-    return $http.get('api/gifts/list').success(function(data){
-      angular.copy(data, o.gifts);
-    });
-  };
-  return o;
-}]);
-
-app.controller('MainCtrl', [
-'$scope',
-'gifts',
-function($scope, gifts) {
-    $scope.gifts = posts.gifts;
-
-    $scope.addGift = function(){
-        if(!$scope.title || $scope.title === '') { return; }
-
-        $scope.posts.push({
-            title: $scope.title,
-            link: $scope.link,
-            description: $scope.description,
-        });
-
-        $scope.title = '';
-        $scope.link = '';
-        $scope.description = '';
+    var o = {
+        gifts: []
     };
+    o.getAll = function() {
+        return $http.get('/api/gifts/list').success(function(data){
+            angular.copy(data, o.gifts);
+        });
+    };
+    o.create = function(gift) {
+        return $http.post('/api/gifts/create', gift).success(function(data){
+            o.gifts.push(data);
+        });
+    };
+    o.get = function(id) {
+        return $http.get('/api/gifts/' + id).then(function(res) {
+            return res.data;
+        });
+    };
+    return o;
 }]);
+
+app.controller('ListCtrl', [
+    '$scope',
+    'gifts',
+    function($scope, gifts) {
+        $scope.gifts = gifts.gifts;
+
+        $scope.addGift = function() {
+            if(!$scope.title || $scope.title === '') { return; }
+
+            gifts.create({
+                title: $scope.title,
+                link: $scope.link,
+                description: $scope.description,
+            });
+
+            $scope.title = '';
+            $scope.link = '';
+            $scope.description = '';
+        };
+    }
+]);
 
 app.controller('GiftsCtrl', [
     '$scope',
-    '$stateParams',
     'gifts',
-    function($scope, $stateParams, gifts) {
-        $scope.gift = gifts.gifts[$stateParams.id];
+    'gift',
+    function($scope, gifts, gift) {
+        $scope.gift = gift;
     }
 ]);
 
@@ -53,17 +64,22 @@ function($stateProvider, $urlRouterProvider) {
     .state('home', {
         url: '/',
         templateUrl: '/home.html',
-        controller: 'MainCtrl'/*,
+        controller: 'ListCtrl',
         resolve: {
             giftPromise: ['gifts', function(gifts) {
                 return gifts.getAll();
             }]
-        }*/
+        }
     })
     .state('gifts', {
-        url: '/gifts',
-        templateUrl: '/gifts/gifts.html',
-        controller: 'GiftsCtrl'
+        url: '/gifts/{id}',
+        templateUrl: '/gifts.html',
+        controller: 'GiftsCtrl',
+        resolve: {
+            gift: ['$stateParams', 'gifts', function($stateParams, gifts) {
+              return gifts.get($stateParams.id);
+            }]
+        } 
     });
 
     $urlRouterProvider.otherwise('home');

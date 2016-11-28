@@ -1,16 +1,20 @@
-        <div class="page-header">
-            <h1>CadoCom Gifts</h1>
-        </div>
+      <h1>CadoCom Gifts</h1>
 
-        <div ng-repeat="gift in gifts">
+      <div ng-repeat="gift in gifts">
         <span style="font-size:20px; margin-left:10px;">
           <a ng-show="gift.link" href="{{gift.link}}">
             {{gift.title}}
           </a>
+          <span>
+            <a href="#/gifts/{{gift._id}}">Details</a>
+          </span>
           <span ng-hide="gift.link">
             {{gift.title}}
           </span>
         </span>
+        <p>
+          {{gift.description}}
+        </p>
       </div>
 
       <form ng-submit="addGift()"
