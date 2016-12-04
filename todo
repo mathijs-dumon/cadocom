@@ -1,0 +1,6 @@
+
+Follow this guide to get a login form working:
+https://vickev.com/#!/article/authentication-in-single-page-applications-node-js-passportjs-angularjs
+
+Login form is basicly working, now the JWT token signing stuff needs to be implemented in the angular side of things:
+https://thinkster.io/angularjs-jwt-auth

@@ -1,28 +1,10 @@
+var models = require('./models');
+
+var passport    = require('passport');
+require('./passport-config');
+
 var express = require('express')
-
 var router = express.Router()
-
-/*// middleware that is specific to this router
-router.use(function timeLog (req, res, next) {
-  console.log('Time: ', Date.now())
-  next()
-})*/
-
-/*---------------------------------------------------------------------------------------*/
-/*                                 Utility functions                                     */
-/*---------------------------------------------------------------------------------------*/
-getToken = function (headers) {
-  if (headers && headers.authorization) {
-    var parted = headers.authorization.split(' ');
-    if (parted.length === 2) {
-      return parted[1];
-    } else {
-      return null;
-    }
-  } else {
-    return null;
-  }
-};
 
 /*---------------------------------------------------------------------------------------*/
 /*                                      REGISTER                                         */
@@ -35,14 +17,13 @@ router.post('/register', function(req, res, next){
     });
   }
 
-  var user = new User();
+  var user = new models.User();
 
   user.username = req.body.username;
-
-  user.setPassword(req.body.password)
+  user.setPassword(req.body.password);
 
   user.save(function (err){
-    if(err){ return next(err); }
+    if (err) { return next(err); }
 
     return res.json({ token: user.generateJWT() })
   });
@@ -56,15 +37,33 @@ router.post('/login', function(req, res, next){
     return res.status(400).json({message: 'Please fill out all fields'});
   }
 
-  passport.authenticate('local', function(err, user, info){
-    if(err){ return next(err); }
+  passport.authenticate('local', function(err, user, info) {
+    if (err) { return next(err); }
 
-    if(user){
+    if (user) {
       return res.json({ token: user.generateJWT() });
     } else {
       return res.status(401).json(info);
     }
   })(req, res, next);
+});
+
+/*---------------------------------------------------------------------------------------*/
+/*                                  LIST (for debugging)                                 */
+/*---------------------------------------------------------------------------------------*/
+/*router.get('/list', function(req, res, next){
+  models.User.find(function(err, users){
+    if (err) { return next(err); }
+    res.json(users);
+  });
+});*/
+
+/*---------------------------------------------------------------------------------------*/
+/*                                    LOGGED IN TEST                                     */
+/*---------------------------------------------------------------------------------------*/
+router.get('/loggedin', function(req, res) {
+  console.log(req.user);
+  res.send(req.isAuthenticated() ? req.user : '0'); 
 });
 
 module.exports = router;

@@ -21,14 +21,18 @@ UserSchema.methods.generateJWT = function() {
   return jwt.generateJWT(this);
 };
  
-UserSchema.methods.comparePassword = function (password) {
-  var hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
-  return this.hash === hash;
+UserSchema.methods.validPassword = function (password) {
+  var password = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
+  return this.password === password;
 };
  
 UserSchema.methods.setPassword = function(password){
   this.salt = crypto.randomBytes(16).toString('hex');
-  this.hash = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
+  this.password = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
 };
 
 mongoose.model('User', UserSchema);
+
+module.exports = {
+  'User': mongoose.model('User')
+};

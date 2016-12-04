@@ -1,4 +1,7 @@
 <h1>Login</h1>
+<div ng-show="error" class="alert alert-danger row">
+  <span>{{ error.message }}</span>
+</div>
 <form ng-submit="login()">
   <p>
     <label class="control-label">Username</label>

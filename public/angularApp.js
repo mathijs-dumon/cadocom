@@ -2,51 +2,134 @@ var app = angular.module('cadoCom', [
     'ui.router'
 ]);
 
+/* Constants: */
+app.constant('API_PREFIX', '/api/');
+
+
+/*---------------------------------------------------------------------------------------*/
+/*                                 GIFTS API Factory                                     */
+/*---------------------------------------------------------------------------------------*/
+app.factory('gifts', ['$http', 'API_PREFIX', function($http, API_PREFIX){
+    var o = {
+        gifts: []
+    };
+    o.getAll = function() {
+        return $http.get(API_PREFIX + 'gifts/list').success(function(data){
+            angular.copy(data, o.gifts);
+        });
+    };
+    o.create = function(gift) {
+        return $http.post(API_PREFIX + 'gifts/create', gift).success(function(data){
+            o.gifts.push(data);
+        });
+    };
+    o.get = function(id) {
+        return $http.get(API_PREFIX + 'gifts/' + id).then(function(res) {
+            return res.data;
+        });
+    };
+    return o;
+}]);
+
+/*---------------------------------------------------------------------------------------*/
+/*                                 AUTH API Factory                                      */
+/*---------------------------------------------------------------------------------------*/
+app.factory('auth', [ '$window', function($window) {
+    var o = { };
+
+    o.parseJwt = function(token) {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace('-', '+').replace('_', '/');
+        return JSON.parse($window.atob(base64));
+    };
+
+    o.saveToken = function(token) {
+        $window.localStorage['jwtToken'] = token;
+    };
+
+    o.getToken = function() {
+        return $window.localStorage['jwtToken'];
+    };
+
+    o.isAuthed = function() {
+        var token = o.getToken();
+        if(token) {
+            var params = o.parseJwt(token);
+            return Math.round(new Date().getTime() / 1000) <= params.exp;
+        } else {
+            return false;
+        }
+    };
+
+    o.logout = function() {
+        $window.localStorage.removeItem('jwtToken');
+    };
+
+    return o;
+
+}]);
+
+/*---------------------------------------------------------------------------------------*/
+/*                                    Interceptors                                       */
+/*---------------------------------------------------------------------------------------*/
+app.factory('authInterceptor', function(API_PREFIX, auth) { 
+    return { 
+        request: function(config) {  // automatically attach auth header
+            var token = auth.getToken();
+            if(config.url.indexOf(API_PREFIX) === 0 && token) {
+                config.headers['x-access-token'] = token;
+            }
+            return config;
+        },
+        response: function(res) { // if a token was received, save it
+            if(res.config.url.indexOf(API_PREFIX) === 0 && res.data.token) {
+                auth.saveToken(res.data.token);
+            }
+            return res;
+        },
+    };
+});
+
+app.factory('error401Interceptor', function($q, $location) { 
+    return { 
+        response: function(response) { 
+            // do something on success
+            return response;
+        },
+        responseError: function(response) {
+            if (response.status === 401)
+                $location.url('/login');
+            return $q.reject(response);
+        }
+    };
+});
+
 /*---------------------------------------------------------------------------------------*/
 /*                                     AppConfig                                         */
 /*---------------------------------------------------------------------------------------*/
-app.config([
-'$stateProvider',
-'$urlRouterProvider',
-'$httpProvider',
+app.config([ '$stateProvider', '$urlRouterProvider', '$httpProvider',
 function($stateProvider, $urlRouterProvider, $httpProvider) {
 
-    var checkLoggedin = function($q, $timeout, $http, $location, $rootScope) {
+    /* Detects 401 errors and redirects to login page: */
+    $httpProvider.interceptors.push('error401Interceptor');
+
+    /* Detects JWT tokens and handles them */
+    $httpProvider.interceptors.push('authInterceptor');
+
+    /* */
+    var requiresAuth = ['$q', '$location', function($q, $location) {
         // Initialize a new promise
         var deferred = $q.defer(); 
 
-        // Check if the user is logged in
-        $http.get('/loggedin').success(function (user) {
-            // Authenticated 
-            if (user !== '0') 
-                deferred.resolve(); 
-            // Not Authenticated 
-            else {
-                $rootScope.message = 'You need to log in.';
-                deferred.reject();
-                $location.url('/login');
-            }
-        });
+        if (auth.isAuthed()) {
+            deferred.resolve();
+        } else {
+            $location.url('/login');
+            deferred.reject();
+        }
 
         return deferred.promise;
-    };  
-
-    /* Detects 401 errors and redirects to login page: */
-    $httpProvider.interceptors.push(
-        function($q, $location) { 
-            return { 
-                response: function(response) { 
-                    // do something on success
-                    return response;
-                },
-                responseError: function(response) {
-                    if (response.status === 401)
-                        $location.url('/login');
-                    return $q.reject(response);
-                }
-            };
-        }
-    );
+    }];
 
     $stateProvider
     .state('home', {
@@ -56,8 +139,8 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         resolve: {
             giftPromise: ['gifts', function(gifts) {
                 return gifts.getAll();
-            }],
-            loggedin: checkLoggedin
+            }]/*,
+            authPromise: requiresAuth*/
         }
     })
     .state('gifts', {
@@ -67,8 +150,8 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         resolve: {
             gift: ['$stateParams', 'gifts', function($stateParams, gifts) {
               return gifts.get($stateParams.id);
-            }],
-            loggedin: checkLoggedin
+            }]/*,
+            authPromise: requiresAuth*/
         } 
     })
     .state('login', {
@@ -77,34 +160,9 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         controller: 'LoginCtrl'
     });
 
-    $urlRouterProvider.otherwise('home');
+    $urlRouterProvider.otherwise('login');
 
 
-}]);
-
-/*---------------------------------------------------------------------------------------*/
-/*                                REST API Factories                                     */
-/*---------------------------------------------------------------------------------------*/
-app.factory('gifts', ['$http', function($http){
-    var o = {
-        gifts: []
-    };
-    o.getAll = function() {
-        return $http.get('/api/gifts/list').success(function(data){
-            angular.copy(data, o.gifts);
-        });
-    };
-    o.create = function(gift) {
-        return $http.post('/api/gifts/create', gift).success(function(data){
-            o.gifts.push(data);
-        });
-    };
-    o.get = function(id) {
-        return $http.get('/api/gifts/' + id).then(function(res) {
-            return res.data;
-        });
-    };
-    return o;
 }]);
 
 /*---------------------------------------------------------------------------------------*/
@@ -146,20 +204,21 @@ app.controller('LoginCtrl', [
     '$rootScope',
     '$http',
     '$location',
-    function($scope, $rootScope, $http, $location) {
+    'API_PREFIX',
+    function($scope, $rootScope, $http, $location, API_PREFIX) {
         // This object will be filled by the form
         $scope.user = {};
 
         // Register the login() function
         $scope.login = function () {
-            $http.post('/login', {
+            $http.post(API_PREFIX + 'users/login', {
                 username: $scope.user.username,
                 password: $scope.user.password,
             })
             .success(function(user){
                 // No error: authentication OK
                 $rootScope.message = 'Authentication successful!';
-                $location.url('/admin');
+                $location.url('/');
             })
             .error(function(){
                 // Error: authentication failed
