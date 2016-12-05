@@ -1,6 +1,21 @@
 
-Follow this guide to get a login form working:
-https://vickev.com/#!/article/authentication-in-single-page-applications-node-js-passportjs-angularjs
+What has been done:
+Server side:
+    - REST API's:
+        - gift list API
+        - user api (registering, login, logout)
+Client side:
+    - basic UI
+    - login, Gift adding
 
-Login form is basicly working, now the JWT token signing stuff needs to be implemented in the angular side of things:
-https://thinkster.io/angularjs-jwt-auth
+What still needs to be done:
+Server side:
+    - REST API's:
+        - wishlist API
+        - combining wish, gift and user models (allowing users to have personal lists)
+        - user profile api
+        - ...
+Client side:
+    - logout
+    - profile
+    - when it's there more REST api interfaces

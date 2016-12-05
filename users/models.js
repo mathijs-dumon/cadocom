@@ -4,17 +4,19 @@ var crypto = require('crypto');
 var jwt = require('./jwt');
 
 // set up a mongoose model
-var UserSchema = new Schema({
-    username: {
-        type: String,
-        unique: true,
-        required: true
+// this setup allows linking facebook, twitter and google accounts
+var UserSchema = mongoose.Schema({
+    local: {
+        username:     String,
+        password:     String,
+        salt:         String
     },
-    password: {
-        type: String,
-        required: true
-    },
-    salt: String
+    facebook: {
+        id:           String,
+        token:        String,
+        email:        String,
+        name:         String
+    }
 });
  
 UserSchema.methods.generateJWT = function() {
@@ -22,13 +24,13 @@ UserSchema.methods.generateJWT = function() {
 };
  
 UserSchema.methods.validPassword = function (password) {
-  var password = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
-  return this.password === password;
+  var password = crypto.pbkdf2Sync(password, this.local.salt, 1000, 64).toString('hex');
+  return this.local.password === password;
 };
  
 UserSchema.methods.setPassword = function(password){
-  this.salt = crypto.randomBytes(16).toString('hex');
-  this.password = crypto.pbkdf2Sync(password, this.salt, 1000, 64).toString('hex');
+  this.local.salt = crypto.randomBytes(16).toString('hex');
+  this.local.password = crypto.pbkdf2Sync(password, this.local.salt, 1000, 64).toString('hex');
 };
 
 mongoose.model('User', UserSchema);

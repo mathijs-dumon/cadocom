@@ -1,3 +1,5 @@
+var models = require('./models');
+
 var jwt = require('express-jwt');
 var jsonwt = require('jsonwebtoken');
 var secret = require('../database/config')['secret'];
@@ -14,7 +16,7 @@ jwtService.generateJWT = function(user) {
 
     return jsonwt.sign({
         _id: user._id,
-        username: user.username,
+        username: user.local.username,
         exp: parseInt(exp.getTime() / 1000),
     }, secret);
 };
@@ -30,7 +32,8 @@ jwtService.jwtTokenMiddleware = function(req, res, next) {
                 return res.json({ success: false, message: 'Failed to authenticate token.' });    
             } else {
                 // if everything is good, save to request for use in other routes
-                req.decoded = decoded;    
+                req.decoded = decoded;
+                req.user = User.findOne({ 'local.username': decoder.username });
                 next();
             }
         });
