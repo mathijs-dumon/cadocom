@@ -53,7 +53,7 @@ app.factory('auth', [ '$window', function($window) {
 
     o.isAuthed = function() {
         var token = o.getToken();
-        if(token) {
+        if (token) {
             var params = o.parseJwt(token);
             return Math.round(new Date().getTime() / 1000) <= params.exp;
         } else {
@@ -63,6 +63,19 @@ app.factory('auth', [ '$window', function($window) {
 
     o.logout = function() {
         $window.localStorage.removeItem('jwtToken');
+    };
+
+    return o;
+
+}]);
+
+app.factory('profile', [ '$http', '$location', 'API_PREFIX', function($http, $location, API_PREFIX) {
+    var o = { };
+
+    o.getProfile = function() {
+        return $http.get(API_PREFIX + 'users/profile').then(function(res) {
+            return res.data;
+        });
     };
 
     return o;
@@ -117,7 +130,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
 
     /* */
-    var requiresAuth = ['$q', '$location', function($q, $location) {
+    var requiresAuth = ['$q', '$location', 'auth', function($q, $location, auth) {
         // Initialize a new promise
         var deferred = $q.defer(); 
 
@@ -137,10 +150,10 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         templateUrl: '/home.html',
         controller: 'ListCtrl',
         resolve: {
+            authPromise: requiresAuth,
             giftPromise: ['gifts', function(gifts) {
                 return gifts.getAll();
-            }]/*,
-            authPromise: requiresAuth*/
+            }]
         }
     })
     .state('gifts', {
@@ -148,19 +161,27 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         templateUrl: '/gifts.html',
         controller: 'GiftsCtrl',
         resolve: {
+            authPromise: requiresAuth,
             gift: ['$stateParams', 'gifts', function($stateParams, gifts) {
               return gifts.get($stateParams.id);
-            }]/*,
-            authPromise: requiresAuth*/
+            }]
         } 
+    })
+    .state('profile', {
+        url: '/profile',
+        templateUrl: '/views/profile.html',
+        controller: 'UserCtrl',
+        resolve: {
+            authPromise: requiresAuth,
+        }
     })
     .state('login', {
         url: '/login',
         templateUrl: '/views/login.html',
-        controller: 'LoginCtrl'
+        controller: 'UserCtrl'
     });
 
-    $urlRouterProvider.otherwise('login');
+    $urlRouterProvider.otherwise('home');
 
 
 }]);
@@ -199,15 +220,21 @@ app.controller('GiftsCtrl', [
     }
 ]);
 
-app.controller('LoginCtrl', [
+app.controller('UserCtrl', [
     '$scope',
+    '$window',
     '$rootScope',
     '$http',
     '$location',
+    'auth',
+    'profile',
     'API_PREFIX',
-    function($scope, $rootScope, $http, $location, API_PREFIX) {
-        // This object will be filled by the form
-        $scope.user = {};
+    function($scope, $window, $rootScope, $http, $location, auth, profile, API_PREFIX) {
+        // Redirect if user is authed:
+        if (auth.isAuthed())
+            $scope.user = profile.getProfile();
+        else // not logged in, so should display the login form
+            $scope.user = {};
 
         // Register the login() function
         $scope.login = function () {
@@ -226,5 +253,10 @@ app.controller('LoginCtrl', [
                 $location.url('/login');
             });
         };
+
+        $scope.linkWithFacebook = function() {
+            $window.location = "http://localhost:8080" + API_PREFIX + "users/connect/facebook?token=" + auth.getToken();
+        };
+
     }
 ]);

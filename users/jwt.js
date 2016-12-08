@@ -33,7 +33,7 @@ jwtService.jwtTokenMiddleware = function(req, res, next) {
             } else {
                 // if everything is good, save to request for use in other routes
                 req.decoded = decoded;
-                req.user = User.findOne({ 'local.username': decoder.username });
+                req.user = mongoose.model('User').findOne({ 'local.username': decoded.username });
                 next();
             }
         });

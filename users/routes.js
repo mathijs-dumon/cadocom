@@ -1,5 +1,5 @@
-var models = require('./models');
-
+var mongoose    = require('mongoose');
+var User        = mongoose.model('User');
 var passport    = require('passport');
 require('./passport-config');
 
@@ -54,10 +54,10 @@ router.get('/unlink/local', function(req, res) {
 });
 
 router.get('/auth/facebook', jwtTokenMiddleware, passport.authenticate('facebook', { scope : 'email' }));
-router.get('/auth/facebook/callback', jwtTokenMiddleware, passport.authenticate('facebook'));
+router.get('/auth/facebook/callback', passport.authenticate('facebook'));
 
 router.get('/connect/facebook', jwtTokenMiddleware, passport.authorize('facebook', { scope : 'email' }));
-router.get('/connect/facebook/callback', jwtTokenMiddleware, passport.authorize('facebook'));
+router.get('/connect/facebook/callback', passport.authorize('facebook'));
 
 router.get('/unlink/facebook', jwtTokenMiddleware, function(req, res) {
   var user            = req.user;
@@ -68,10 +68,20 @@ router.get('/unlink/facebook', jwtTokenMiddleware, function(req, res) {
 /*---------------------------------------------------------------------------------------*/
 /*                                  LIST (for debugging)                                 */
 /*---------------------------------------------------------------------------------------*/
-router.get('/list', function(req, res, next){
-  models.User.find(function(err, users){
+/*router.get('/list', function(req, res, next){
+  User.find(function(err, users){
     if (err) { return next(err); }
     res.json(users);
+  });
+});*/
+
+/*---------------------------------------------------------------------------------------*/
+/*                               Get profile information                                 */
+/*---------------------------------------------------------------------------------------*/
+router.get('/profile', function(req, res, next) {
+  Gift.find(function(err, gifts){
+    if (err) { return next(err); }
+    res.json(req.user);
   });
 });
 
@@ -79,7 +89,6 @@ router.get('/list', function(req, res, next){
 /*                                    LOGGED IN TEST                                     */
 /*---------------------------------------------------------------------------------------*/
 router.get('/loggedin', function(req, res) {
-  console.log(req.user);
   res.send(req.isAuthenticated() ? req.user : '0'); 
 });
 

@@ -5,10 +5,6 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var users = require('./users/routes');
-var jwtService = require('./users/jwt.js');
-var gifts = require('./gifts/routes');
-
 // initialize the express server app:
 var app = express();
 
@@ -38,7 +34,11 @@ app.get('/', function(req, res, next) {
 });
 
 /* API ROUTES: */
+var users = require('./users/routes');
 app.use('/api/users', users);
+
+var gifts = require('./gifts/routes');
+var jwtService = require('./users/jwt.js');
 app.use('/api/gifts', jwtService.jwtTokenMiddleware, gifts);
 
 // catch 404 and forward to error handler

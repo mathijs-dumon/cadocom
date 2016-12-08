@@ -1,0 +1,27 @@
+<div>
+  <h1>Local profile</h1>
+  <p ng-if="user.local.username">
+    <strong>Id</strong>: <%= user._id %><br />
+    <strong>E-mail</strong>: <%= user.local.email %><br />
+    <strong>Password</strong>: <%= user.local.password %><br />
+
+    <a href="/api/users/unlink/local" class="btn btn-default">Unlink</a>
+  </p>
+  <p ng-if="!user.local.username">
+    <a href="/api/users/connect/local" class="btn btn-default">Connect Local</a>
+  </p>
+</div>
+<div>
+  <h1>Linked wih Facebook profile</h1>
+  <p ng-if="user.facebook.token">
+    <strong>id</strong>: <%= user.facebook.id %><br />
+    <strong>token</strong>: <%= user.facebook.token %><br />
+    <strong>email</strong>: <%= user.facebook.email %><br />
+    <strong>name</strong>: <%= user.facebook.name %><br />
+
+    <a href="/api/users/unlink/facebook" class="btn btn-primary">Unlink</a>
+  </p>
+  <p ng-if="!user.facebook.token">
+    <a href="#" ng-click="linkWithFacebook()" class="btn btn-primary">Connect Facebook</a>
+  </p>
+</div>

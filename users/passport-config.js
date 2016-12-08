@@ -1,7 +1,9 @@
 var config = require('./config');
-var models = require('./models');
 
+var mongoose = require('mongoose');
 var passport = require('passport');
+
+var User = mongoose.model('User');
 
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
@@ -12,10 +14,10 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 passport.use('local-login', new LocalStrategy({ passReqToCallback : true  }, 
   function(req, username, password, done) { 
     process.nextTick(function() {
-      models.User.findOne(function (err, res) {
+      User.findOne(function (err, res) {
         console.log(res);
       });
-      models.User.findOne({ 'local.username':  username }, function(err, user) {
+      User.findOne({ 'local.username':  username }, function(err, user) {
           if (err) return done(err);
           if (!user) {
             console.log(username + " " + user + " " + err);
@@ -42,14 +44,14 @@ var updateUser = function(user, username, password, done) {
 
 passport.use('local-signup', new LocalStrategy({ passReqToCallback : true },
   function(req, username, password, done) {
-    models.User.findOne({ 'local.username': username }, function(err, existingUser) {
+    User.findOne({ 'local.username': username }, function(err, existingUser) {
         if (err) return done(err);
         if (existingUser) 
             return done(null, false, { message: 'That username is already taken.' });
         if (req.user)
             updateUser(req.user, username, password, done);
         else
-            updateUser(new models.User(), username, password, done);
+            updateUser(new User(), username, password, done);
     });
   }
 ));
@@ -71,7 +73,7 @@ var linkFacebookToUser = function(user, profile, token, done) {
   });
 }
 
-passport.use(new FacebookStrategy({
+passport.use(new FacebookStrategy({ // https://github.com/expressjs/session TODO: store the JWT token in between these calls in the session is the only way!!
     clientID        : config.facebookAuth.clientID,
     clientSecret    : config.facebookAuth.clientSecret,
     callbackURL     : config.facebookAuth.callbackURL,
@@ -80,7 +82,7 @@ passport.use(new FacebookStrategy({
     // check if the user is already logged in
     if (!req.user) {
         // find the user in the database based on their facebook id
-        models.User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
+        User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
             if (err) // database error
                 return done(err);
             else if (user) {
@@ -89,7 +91,7 @@ passport.use(new FacebookStrategy({
                     return linkFacebookToUser(user, profile, token, done);
                 return done(null, user); // user found, return that user
             } else
-                return linkFacebookToUser(new models.User(), profile, token, done); // no user = create & link
+                return linkFacebookToUser(new User(), profile, token, done); // no user = create & link
         });
     } else {
         // user exists and is logged in => link accounts

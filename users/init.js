@@ -1,4 +1,4 @@
-require('./models');
+require('./models.js');
 
 var passport    = require('passport');
 require('./passport-config');

@@ -34,7 +34,3 @@ UserSchema.methods.setPassword = function(password){
 };
 
 mongoose.model('User', UserSchema);
-
-module.exports = {
-  'User': mongoose.model('User')
-};
