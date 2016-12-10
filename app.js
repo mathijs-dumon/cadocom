@@ -39,7 +39,7 @@ app.use('/api/users', users);
 
 var gifts = require('./gifts/routes');
 var jwtService = require('./users/jwt.js');
-app.use('/api/gifts', jwtService.jwtTokenMiddleware, gifts);
+app.use('/api/', jwtService.jwtTokenMiddleware, gifts);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
