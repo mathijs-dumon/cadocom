@@ -43,26 +43,27 @@ router.post('/login', function(req, res, next) {
 });
 
 /*---------------------------------------------------------------------------------------*/
-/*                                       CONNECT                                         */
+/*                                CONNECT USING FACEBOOK                                 */
 /*---------------------------------------------------------------------------------------*/
-router.post('/connect/local', passport.authenticate('local-signup'));
-router.get('/unlink/local', function(req, res) {
+/*router.get('/connect/facebook', passport.authenticate('facebook'));
+router.get('/connect/facebook/callback', function(req, res, next) {
+  passport.authenticate('facebook', function(err, user, info) {
+    if (err) return next(err);
+    
+    if (user)
+      return res.json({ token: user.generateJWT() });
+    else
+      return res.status(401).json(info);
+  })(req, res, next);
+});*/
+
+
+/*---------------------------------------------------------------------------------------*/
+/*                                    REMOVE ACCOUNT                                     */
+/*---------------------------------------------------------------------------------------*/
+router.get('/unlink', jwtTokenMiddleware, function(req, res) {
   var user            = req.user;
-  user.local.username = undefined;
-  user.local.password = undefined;
-  user.save();
-});
-
-router.get('/auth/facebook', jwtTokenMiddleware, passport.authenticate('facebook', { scope : 'email' }));
-router.get('/auth/facebook/callback', passport.authenticate('facebook'));
-
-router.get('/connect/facebook', jwtTokenMiddleware, passport.authorize('facebook', { scope : 'email' }));
-router.get('/connect/facebook/callback', passport.authorize('facebook'));
-
-router.get('/unlink/facebook', jwtTokenMiddleware, function(req, res) {
-  var user            = req.user;
-  user.facebook.token = undefined;
-  user.save();
+  user.remove();
 });
 
 /*---------------------------------------------------------------------------------------*/

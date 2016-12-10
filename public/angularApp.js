@@ -181,7 +181,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         controller: 'UserCtrl'
     });
 
-    $urlRouterProvider.otherwise('home');
+    $urlRouterProvider.otherwise('login');
 
 
 }]);
@@ -252,10 +252,6 @@ app.controller('UserCtrl', [
                 $rootScope.message = 'Authentication failed.';
                 $location.url('/login');
             });
-        };
-
-        $scope.linkWithFacebook = function() {
-            $window.location = "http://localhost:8080" + API_PREFIX + "users/connect/facebook?token=" + auth.getToken();
         };
 
     }

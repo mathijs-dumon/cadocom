@@ -1,0 +1,10 @@
+var mongoose    = require('mongoose');
+var config = require('../database/config');
+
+mongoose.connection.on('connected', function() {
+    mongoose.connection.db.dropDatabase(function (err) {
+        console.log('dropped collection %s, %s ', 'cadocom', err);
+        mongoose.connection.close();
+        process.exit(0);
+    });
+});

@@ -9,6 +9,17 @@ var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 
 /*---------------------------------------------------------------------------------------*/
+/*                                     Serialization                                     */
+/*---------------------------------------------------------------------------------------*/
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
+/*---------------------------------------------------------------------------------------*/
 /*                                     LocalStrategy                                     */
 /*---------------------------------------------------------------------------------------*/
 passport.use('local-login', new LocalStrategy({ passReqToCallback : true  }, 
@@ -60,11 +71,10 @@ passport.use('local-signup', new LocalStrategy({ passReqToCallback : true },
 /*                                    FacebookStrategy                                   */
 /*---------------------------------------------------------------------------------------*/
 
-var linkFacebookToUser = function(user, profile, token, done) {
+var updateFacebookUser = function(user, profile, token, done) {
   user.facebook.id    = profile.id; 
   user.facebook.token = token;
   user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
-  user.facebook.email = profile.emails[0].value;
 
   // save to database
   user.save(function(err) {
@@ -73,29 +83,20 @@ var linkFacebookToUser = function(user, profile, token, done) {
   });
 }
 
-passport.use(new FacebookStrategy({ // https://github.com/expressjs/session TODO: store the JWT token in between these calls in the session is the only way!!
-    clientID        : config.facebookAuth.clientID,
-    clientSecret    : config.facebookAuth.clientSecret,
-    callbackURL     : config.facebookAuth.callbackURL,
+passport.use(new FacebookStrategy({
+    clientID        : config.facebookConnect.clientID,
+    clientSecret    : config.facebookConnect.clientSecret,
+    callbackURL     : config.facebookConnect.callbackURL,
     passReqToCallback : true
   }, function(req, token, refreshToken, profile, done) { // facebook will send back the token and profile
-    // check if the user is already logged in
-    if (!req.user) {
-        // find the user in the database based on their facebook id
-        User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
-            if (err) // database error
-                return done(err);
-            else if (user) {
-                // link got removed
-                if (!user.facebook.token)
-                    return linkFacebookToUser(user, profile, token, done);
-                return done(null, user); // user found, return that user
-            } else
-                return linkFacebookToUser(new User(), profile, token, done); // no user = create & link
-        });
-    } else {
-        // user exists and is logged in => link accounts
-        return linkFacebookToUser(req.user, profile, token, done);
-    }
+    // find the user in the database based on their facebook id
+    User.findOne({ 'facebook.id' : profile.id }, function(err, user) {
+        if (err) // database error
+            return done(err);
+        else if (user) {
+            return updateFacebookUser(user, profile, token, done); // existing user = update
+        } else
+            return updateFacebookUser(new User(), profile, token, done); // no user = create & link
+    });
   }
 ));

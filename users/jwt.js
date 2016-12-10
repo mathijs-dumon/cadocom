@@ -1,4 +1,4 @@
-var models = require('./models');
+var mongoose = require('mongoose');
 
 var jwt = require('express-jwt');
 var jsonwt = require('jsonwebtoken');

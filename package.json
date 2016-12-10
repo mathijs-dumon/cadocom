@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "reset_db": "node ./bin/reset_db"
   },
   "dependencies": {
     "angular": "^1.5.9",
