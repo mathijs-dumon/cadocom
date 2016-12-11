@@ -15,6 +15,12 @@
         </div></div>
       </div>
 
+      <div ng-hide="wishes.length"  class="container">
+        <p>
+          No gifts found!
+        </p>
+      </div>
+
       <hr />
 
       <form ng-submit="addWish()" style="margin-top:30px;">

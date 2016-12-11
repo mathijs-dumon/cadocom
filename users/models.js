@@ -17,8 +17,7 @@ var UserSchema = mongoose.Schema({
         name:         String
     },*/
     wishes: [{ type: Schema.Types.ObjectId, ref: 'Gift' }],
-    gifts: [{ type: Schema.Types.ObjectId, ref: 'Gift' }],
-
+    gifts: [{ type: Schema.Types.ObjectId, ref: 'Gift' }]
 });
  
 UserSchema.methods.generateJWT = function() {

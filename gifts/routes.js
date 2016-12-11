@@ -16,7 +16,7 @@ router.param('foruser', function(req, res, next, id) {
   query.exec(function (err, foruser){
     if (err) { return next(err); }
     if (!foruser) { return next(new Error('can\'t find foruser')); }
-    if (foruser._id == req.user._id) {
+    if (foruser._id.equals(req.user._id)) {
       return next(new Error('can\'t query using your own user id')); 
     }
 
@@ -32,7 +32,7 @@ router.param('gift', function(req, res, next, id) {
     if (err) { return next(err); }
     if (!gift) { return next(new Error('can\'t find gift')); }
 
-    if (gift.owner && gift.owner._id == req.user._id)
+    if (gift.owner && gift.owner.equals(req.user._id))
       delete gift.donor; // don't tell the user who's getting his wishes
 
     req.gift = gift;
@@ -84,7 +84,7 @@ router.get('/wishes/:gift', function(req, res) {
 
 // Donate a wish (makes it a gift)
 router.post('/wishes/:gift/donate', function(req, res, next) {
-  if (req.gift._owner == req.user._id)
+  if (req.gift.owner.equals(req.user._id)
      return next(new Error('can\'t give your own whish'));
   else {
     req.gift._donor = req.user._id;
@@ -97,8 +97,8 @@ router.post('/wishes/:gift/donate', function(req, res, next) {
 
 // Delete a wish
 router.get('/wishes/:gift/delete', function(req, res) {
-  if (req.gift._owner != req.user._id)
-    return res.json({ message: 'You can not delete another user\'s wish!' });
+  if (!req.gift.owner.equals(req.user._id))
+    return res.json({ message: 'You can not delete another user\'s (id: '+req.gift.owner+') wish (your id is ' + req.user._id + ')!' });
   req.gift.remove();
   return res.json({ message: 'Successfully deleted wish.' });
 });

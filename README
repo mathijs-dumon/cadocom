@@ -1,0 +1,8 @@
+To install:
+  npm install
+
+To launch:
+  npm start
+
+To reset the databse:
+  npm run-script reset_db
