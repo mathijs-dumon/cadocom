@@ -67,7 +67,7 @@ router.get('/unlink', jwtTokenMiddleware, function(req, res) {
 });
 
 /*---------------------------------------------------------------------------------------*/
-/*                                  LIST (for debugging)                                 */
+/*                                       LIST                                            */
 /*---------------------------------------------------------------------------------------*/
 /*router.get('/list', function(req, res, next){
   User.find(function(err, users){
@@ -76,14 +76,24 @@ router.get('/unlink', jwtTokenMiddleware, function(req, res) {
   });
 });*/
 
+router.get('/query', jwtTokenMiddleware, function(req, res, next){
+  var query = req.body.query;
+  User
+   .find({ 'local.username': new RegExp('^'+query+'$', "i") })
+   .select('-local.password -local.salt -gifts')
+   .run(
+      function(err, users){
+        if (err) { return next(err); }
+        res.json(users);
+      }
+    );
+})
+
 /*---------------------------------------------------------------------------------------*/
 /*                               Get profile information                                 */
 /*---------------------------------------------------------------------------------------*/
 router.get('/profile', function(req, res, next) {
-  Gift.find(function(err, gifts){
-    if (err) { return next(err); }
-    res.json(req.user);
-  });
+  res.json(req.user);
 });
 
 /*---------------------------------------------------------------------------------------*/

@@ -7,6 +7,10 @@ var Gift = mongoose.model('Gift');
 var User = mongoose.model('User');
 
 router.param('foruser', function(req, res, next, id) {
+
+  if (id == 'self')
+    id = req.user._id;
+
   var query = User.findById(id);
 
   query.exec(function (err, foruser){
@@ -28,8 +32,8 @@ router.param('gift', function(req, res, next, id) {
     if (err) { return next(err); }
     if (!gift) { return next(new Error('can\'t find gift')); }
 
-    if (gift.owner._id == req.user._id)
-      delete gift.donor;
+    if (gift.owner && gift.owner._id == req.user._id)
+      delete gift.donor; // don't tell the user who's getting his wishes
 
     req.gift = gift;
     return next();
@@ -37,7 +41,7 @@ router.param('gift', function(req, res, next, id) {
 });
 
 // Create a new wish
-router.post('wish/create', function(req, res, next) {
+router.post('/wishes/create', function(req, res, next) {
   var wish = new Gift(req.body);
   wish.owner = req.user._id;
   
@@ -49,11 +53,11 @@ router.post('wish/create', function(req, res, next) {
 });
 
 // Get own wishes
-router.get('wish/list/self', function(req, res, next) {
+router.get('/wishes/list/self', function(req, res, next) {
   Gift
     .find({ 'owner': req.user._id })
-    .exclude('donor')
-    .run(
+    .select('-donor')
+    .exec(
       function(err, wishes){
        if (err) { return next(err); }
        res.json(wishes);
@@ -62,10 +66,10 @@ router.get('wish/list/self', function(req, res, next) {
 });
 
 // Get another user's wishes
-router.get('wish/list/:foruser', function(req, res, next) {
+router.get('/wishes/list/:foruser', function(req, res, next) {
   Gift
     .find({ 'owner': req.foruser._id })
-    .run(
+    .exec(
       function(err, wishes){
         if (err) { return next(err); }
         res.json(wishes);
@@ -74,31 +78,36 @@ router.get('wish/list/:foruser', function(req, res, next) {
 });
 
 // Get a wish
-router.get('wish/:gift', function(req, res) {
-  res.json(req.wish);
+router.get('/wishes/:gift', function(req, res) {
+  res.json(req.gift);
 });
 
 // Donate a wish (makes it a gift)
-router.post('wish/:gift/donate', function(req, res, next) {
+router.post('/wishes/:gift/donate', function(req, res, next) {
   if (req.gift._owner == req.user._id)
      return next(new Error('can\'t give your own whish'));
   else {
-
     req.gift._donor = req.user._id;
     req.save(function(err, wish){
-    if (err) { return next(err); }
-
-    res.json(wish);
-  });
-
+      if (err) { return next(err); }
+      res.json(wish);
+    });
   }
 });
 
+// Delete a wish
+router.get('/wishes/:gift/delete', function(req, res) {
+  if (req.gift._owner != req.user._id)
+    return res.json({ message: 'You can not delete another user\'s wish!' });
+  req.gift.remove();
+  return res.json({ message: 'Successfully deleted wish.' });
+});
+
 // List own gifts:
-router.get('gifts/list', function(req, res, next) {
+router.get('/gifts/list', function(req, res, next) {
   Gift
     .find({ 'donor': req.user._id })
-    .run(
+    .exec(
       function(err, gifts){
         if (err) { return next(err); }
         res.json(gifts);
@@ -106,11 +115,7 @@ router.get('gifts/list', function(req, res, next) {
     );
 });
 
-
-
-
-
-router.get('gifts/:gift', function(req, res) {
+router.get('/gifts/:gift', function(req, res) {
   res.json(req.gift);
 });
 

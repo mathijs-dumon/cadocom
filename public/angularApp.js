@@ -1,6 +1,29 @@
 var app = angular.module('cadoCom', [
     'ui.router'
 ]);
+app.run(['$rootScope', function($rootScope) { 
+    $rootScope.$on('$stateChangeStart',function(event, toState, toParams, fromState, fromParams){
+      console.log('$stateChangeStart to '+toState.to+'- fired when the transition begins. toState,toParams : \n',toState, toParams);
+    });
+
+    $rootScope.$on('$stateChangeError',function(event, toState, toParams, fromState, fromParams){
+      console.log('$stateChangeError - fired when an error occurs during transition.');
+      console.log(arguments);
+    });
+
+    $rootScope.$on('$stateChangeSuccess',function(event, toState, toParams, fromState, fromParams){
+      console.log('$stateChangeSuccess to '+toState.name+'- fired once the state transition is complete.');
+    });
+
+    $rootScope.$on('$viewContentLoaded',function(event){
+      console.log('$viewContentLoaded - fired after dom rendered',event);
+    });
+
+    $rootScope.$on('$stateNotFound',function(event, unfoundState, fromState, fromParams){
+      console.log('$stateNotFound '+unfoundState.to+'  - fired when a state cannot be found by its name.');
+      console.log(unfoundState, fromState, fromParams);
+    });
+}]);
 
 /* Constants: */
 app.constant('API_PREFIX', '/api/');
@@ -9,22 +32,50 @@ app.constant('API_PREFIX', '/api/');
 /*---------------------------------------------------------------------------------------*/
 /*                                 GIFTS API Factory                                     */
 /*---------------------------------------------------------------------------------------*/
-app.factory('gifts', ['$http', 'API_PREFIX', function($http, API_PREFIX){
-    var o = {
-        gifts: []
-    };
+app.factory('giftsService', ['$http', 'API_PREFIX', function($http, API_PREFIX){
+    var o = {};
     o.getAll = function() {
-        return $http.get(API_PREFIX + 'gifts/list').success(function(data){
-            angular.copy(data, o.gifts);
-        });
-    };
-    o.create = function(gift) {
-        return $http.post(API_PREFIX + 'gifts/create', gift).success(function(data){
-            o.gifts.push(data);
+        return $http.get(API_PREFIX + 'gifts/list').then(function(res){
+             return res.data;
         });
     };
     o.get = function(id) {
         return $http.get(API_PREFIX + 'gifts/' + id).then(function(res) {
+            return res.data;
+        });
+    };
+    return o;
+}]);
+
+/*---------------------------------------------------------------------------------------*/
+/*                                 WISHES API Factory                                    */
+/*---------------------------------------------------------------------------------------*/
+app.factory('wishesService', ['$http', 'API_PREFIX', function($http, API_PREFIX){
+    var o = {};
+    o.create = function(wish) {
+        return $http.post(API_PREFIX + 'wishes/create', wish).success(function(data){
+            return true;
+        });
+    };
+    o.delete = function(id) {
+        return $http.get(API_PREFIX + 'wishes/' + id + '/delete').then(function(res){
+            return true;
+        });
+    };
+    o.getAll = function(userid) {
+        if (userid == undefined)
+            userid = 'self';
+        return $http.get(API_PREFIX + 'wishes/list/' + userid).then(function(res){
+            return res.data;
+        });
+    };
+    o.get = function(id) {
+        return $http.get(API_PREFIX + 'wishes/' + id).then(function(res) {
+            return res.data;
+        });
+    };
+    o.donate = function(id) {
+        return $http.get(API_PREFIX + 'wishes/' + id + "/donate").then(function(res) {
             return res.data;
         });
     };
@@ -122,7 +173,6 @@ app.factory('error401Interceptor', function($q, $location) {
 /*---------------------------------------------------------------------------------------*/
 app.config([ '$stateProvider', '$urlRouterProvider', '$httpProvider',
 function($stateProvider, $urlRouterProvider, $httpProvider) {
-
     /* Detects 401 errors and redirects to login page: */
     $httpProvider.interceptors.push('error401Interceptor');
 
@@ -145,26 +195,62 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
     }];
 
     $stateProvider
-    .state('home', {
+    .state('index', {
         url: '/',
-        templateUrl: '/home.html',
-        controller: 'ListCtrl',
+        templateUrl: '/views/home.html',
+        controller: 'IndexCtrl',
         resolve: {
             authPromise: requiresAuth,
-            giftPromise: ['gifts', function(gifts) {
-                return gifts.getAll();
+            profile: ['profile', function(profile) {
+              return profile.getProfile();
             }]
         }
-    })
-    .state('gifts', {
-        url: '/gifts/{id}',
-        templateUrl: '/gifts.html',
-        controller: 'GiftsCtrl',
+    })    
+    .state('wishlist', {
+        url: '/wishlist',
+        params: {
+            userId: null
+        },
+        templateUrl: '/views/wishlist.html',
+        controller: 'WishlistCtrl',
         resolve: {
-            authPromise: requiresAuth,
-            gift: ['$stateParams', 'gifts', function($stateParams, gifts) {
-              return gifts.get($stateParams.id);
-            }]
+            wishes: ['wishesService', '$stateParams', function(wishesService, $stateParams) {
+                return wishesService.getAll($stateParams['userId']);
+            }],
+            authPromise: requiresAuth
+        }
+    })
+    .state('wishdetail', {
+        url: '/wishdetail/{id}',
+        templateUrl: '/views/wishdetail.html',
+        controller: 'WishdetailCtrl',
+        resolve: {
+            wish: ['wishesService', '$stateParams', function(wishesService, $stateParams) {
+                return wishesService.get($stateParams['id']);;
+            }],
+            authPromise: requiresAuth
+        } 
+    })
+    .state('giftlist', {
+        url: '/giftlist',
+        templateUrl: '/views/giftlist.html',
+        controller: 'GiftlistCtrl',
+        resolve: {
+            gifts: ['giftsService', function(giftsService) {
+                return giftsService.getAll();
+            }],
+            authPromise: requiresAuth
+        }
+    })
+    .state('giftdetail', {
+        url: '/gifts/{id}',
+        templateUrl: '/views/giftdetail.html',
+        controller: 'GiftdetailCtrl',
+        resolve: {
+            gift: ['$stateParams', 'giftsService', function($stateParams, giftsService) {
+              return giftsService.get($stateParams['id']);
+            }],
+            authPromise: requiresAuth
         } 
     })
     .state('profile', {
@@ -175,68 +261,127 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
             authPromise: requiresAuth,
         }
     })
+    .state('logout', {
+        url: '/logout',
+        controller: function($scope, $rootScope, $location, auth) {
+            auth.logout();
+            $rootScope.message = 'Succesfully logged out!';
+            $location.url('/login');
+        }
+    })
     .state('login', {
         url: '/login',
         templateUrl: '/views/login.html',
         controller: 'UserCtrl'
-    });
+    })
+    .state('register', {
+        url: '/register',
+        templateUrl: '/views/register.html',
+        controller: 'UserCtrl'
+    });;
 
     $urlRouterProvider.otherwise('login');
 
 
 }]);
 
+
 /*---------------------------------------------------------------------------------------*/
 /*                                    Controllers                                        */
 /*---------------------------------------------------------------------------------------*/
-app.controller('ListCtrl', [
+
+app.controller('IndexCtrl', [
+    '$rootScope',
     '$scope',
-    'gifts',
-    function($scope, gifts) {
-        $scope.gifts = gifts.gifts;
+    function($rootScope, $scope, profile) {
+        $rootScope.title = 'Home';
+        $scope.profile = profile;
+    }
+]);
 
-        $scope.addGift = function() {
-            if(!$scope.title || $scope.title === '') { return; }
+app.controller('WishlistCtrl', [
+    '$rootScope',
+    '$scope',
+    '$state',
+    'wishesService',
+    'wishes',
+    function($rootScope, $scope, $state, wishesService, wishes) {
+        $rootScope.title = 'Wishlist';
+        $scope.wishes = wishes;
 
-            gifts.create({
+        $scope.addWish = function() {
+            wishesService.create({
                 title: $scope.title,
                 link: $scope.link,
                 description: $scope.description,
-            });
+            }).then(function() {
+                $scope.title = '';
+                $scope.link = '';
+                $scope.description = '';
 
-            $scope.title = '';
-            $scope.link = '';
-            $scope.description = '';
+                $state.reload();                
+            });
+        };
+
+        $scope.deleteWish = function(id) {
+            wishesService.delete(id).then(function() {
+                $state.reload();
+            });
         };
     }
 ]);
 
-app.controller('GiftsCtrl', [
+app.controller('WishdetailCtrl', [
+    '$rootScope',
     '$scope',
+    'wishesService',
+    'wish',
+    function($rootScope, $scope, wishesService, wish) {
+        $rootScope.title = 'Wish details';
+        console.log("I'm here with" + wish);
+        $scope.wish = wish;
+    }
+]);
+
+app.controller('GiftlistCtrl', [
+    '$rootScope',
+    '$scope',
+    'giftsService',
     'gifts',
+    function($rootScope, $scope, giftsService, gifts) {
+        $rootScope.title = 'Giftlist';
+        $scope.gifts = gifts;
+    }
+]);
+
+app.controller('GiftsCtrl', [
+    '$rootScope',
+    '$scope',
+    'giftsService',
     'gift',
-    function($scope, gifts, gift) {
+    function($rootScope, $scope, giftsService, gift) {
+        $rootScope.title = 'Gift details';
         $scope.gift = gift;
     }
 ]);
 
 app.controller('UserCtrl', [
-    '$scope',
-    '$window',
     '$rootScope',
+    '$scope',
     '$http',
     '$location',
     'auth',
     'profile',
     'API_PREFIX',
-    function($scope, $window, $rootScope, $http, $location, auth, profile, API_PREFIX) {
+    function($rootScope, $scope, $http, $location, auth, profile, API_PREFIX) {
         // Redirect if user is authed:
-        if (auth.isAuthed())
+        if (auth.isAuthed()) {
             $scope.user = profile.getProfile();
+            $location.url('/');
+        }
         else // not logged in, so should display the login form
             $scope.user = {};
 
-        // Register the login() function
         $scope.login = function () {
             $http.post(API_PREFIX + 'users/login', {
                 username: $scope.user.username,
@@ -249,8 +394,25 @@ app.controller('UserCtrl', [
             })
             .error(function(){
                 // Error: authentication failed
-                $rootScope.message = 'Authentication failed.';
+                $rootScope.message = 'Incorrect username or password!';
                 $location.url('/login');
+            });
+        };
+
+        $scope.register = function () {
+            $http.post(API_PREFIX + 'users/register', {
+                username: $scope.user.username,
+                password: $scope.user.password,
+            })
+            .success(function(user){
+                // No error: authentication OK
+                $rootScope.message = 'Registration successful!';
+                $location.url('/');
+            })
+            .error(function(){
+                // Error: authentication failed
+                $rootScope.message = 'Registration failed!';
+                $location.url('/register');
             });
         };
 

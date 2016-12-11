@@ -1,0 +1,7 @@
+      <h1>Your giftlist:</h1>
+
+      <div ng-repeat="gift in gifts">
+          <a href="#/gifts/{{gift._id}}" title="View details for {{ gift.title }}"><h3>
+            {{gift.title}}
+          </h3></a>
+      </div>
