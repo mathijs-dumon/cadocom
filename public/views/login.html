@@ -1,26 +1,32 @@
-<h1>Login</h1>
-<div ng-show="message" class="alert alert-danger row">
-  <span>{{ message }}</span>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="pull-right">Need an account? <a href="#" ui-sref="register">Register</a>!</span>
+    Sign in
+  </div>
+  <div class="panel-body">
+    <form class="form-horizontal" ng-submit="login()">
+      <div ng-show="message" class="alert alert-danger row">
+        <span>{{ message }}</span>
+      </div>
+      <div class="form-group row">
+        <label for="username" class="col-sm-2 control-label">Username</label>
+        <div class="col-sm-3">
+          <input type="text" class="form-control" id="username" placeholder="Username" ng-model="user.username" />
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="password" class="col-sm-2 control-label">Password</label>
+        <div class="col-sm-3">
+          <input type="password" class="form-control" id="password" placeholder="Password" ng-model="user.password" />
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <div class="col-sm-offset-3 col-sm-2">
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
-
-<form class="form-horizontal" ng-submit="login()">
-  <div class="form-group row">
-    <label for="username" class="col-sm-2 control-label">Username</label>
-    <div class="col-sm-3">
-      <input type="text" class="form-control" id="username" placeholder="Username" ng-model="user.username" />
-    </div>
-  </div>
-
-  <div class="form-group row">
-    <label for="password" class="col-sm-2 control-label">Password</label>
-    <div class="col-sm-3">
-      <input type="password" class="form-control" id="password" placeholder="Password" ng-model="user.password" />
-    </div>
-  </div>
-
-  <div class="form-group row">
-    <div class="col-sm-offset-2 col-sm-2">
-      <button type="submit" class="btn btn-primary">Sign in</button>
-    </div>
-  </div>
-</form>

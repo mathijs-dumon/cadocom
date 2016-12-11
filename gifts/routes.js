@@ -84,7 +84,7 @@ router.get('/wishes/:gift', function(req, res) {
 
 // Donate a wish (makes it a gift)
 router.post('/wishes/:gift/donate', function(req, res, next) {
-  if (req.gift.owner.equals(req.user._id)
+  if (req.gift.owner.equals(req.user._id))
      return next(new Error('can\'t give your own whish'));
   else {
     req.gift._donor = req.user._id;

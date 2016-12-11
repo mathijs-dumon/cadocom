@@ -85,7 +85,8 @@ app.factory('wishesService', ['$http', 'API_PREFIX', function($http, API_PREFIX)
 /*---------------------------------------------------------------------------------------*/
 /*                                 AUTH API Factory                                      */
 /*---------------------------------------------------------------------------------------*/
-app.factory('auth', [ '$window', function($window) {
+
+app.factory('jwtTokenService', [ '$window', function($window) {
     var o = { };
 
     o.parseJwt = function(token) {
@@ -102,17 +103,7 @@ app.factory('auth', [ '$window', function($window) {
         return $window.localStorage['jwtToken'];
     };
 
-    o.isAuthed = function() {
-        var token = o.getToken();
-        if (token) {
-            var params = o.parseJwt(token);
-            return Math.round(new Date().getTime() / 1000) <= params.exp;
-        } else {
-            return false;
-        }
-    };
-
-    o.logout = function() {
+    o.clearToken = function() {
         $window.localStorage.removeItem('jwtToken');
     };
 
@@ -120,7 +111,7 @@ app.factory('auth', [ '$window', function($window) {
 
 }]);
 
-app.factory('profile', [ '$http', '$location', 'API_PREFIX', function($http, $location, API_PREFIX) {
+app.factory('profileService', [ '$rootScope', '$http', 'jwtTokenService', 'API_PREFIX', function($rootScope, $http, jwtTokenService, API_PREFIX) {
     var o = { };
 
     o.getProfile = function() {
@@ -129,6 +120,44 @@ app.factory('profile', [ '$http', '$location', 'API_PREFIX', function($http, $lo
         });
     };
 
+    o.isAuthed = function() {
+        var token = jwtTokenService.getToken();
+        if (token) {
+            var params = jwtTokenService.parseJwt(token);
+            return Math.round(new Date().getTime() / 1000) <= params.exp;
+        } else {
+            return false;
+        }
+    };
+
+    o.login = function(username, password) {
+        return $http.post(API_PREFIX + 'users/login', {
+            username: username,
+            password: password,
+        })
+        .success(function(user){
+            // No error: authentication OK
+            $rootScope.authed = true;
+        })
+        .error(function(){
+            // Error: authentication failed
+            jwtTokenService.clearToken();
+            $rootScope.authed = false;
+        });
+    };
+
+    o.logout = function() {
+        jwtTokenService.clearToken();
+        $rootScope.authed = false;
+    };
+
+    o.register = function(username, password) {
+        $http.post(API_PREFIX + 'users/register', {
+            username: username,
+            password: password,
+        });
+    }
+
     return o;
 
 }]);
@@ -136,10 +165,10 @@ app.factory('profile', [ '$http', '$location', 'API_PREFIX', function($http, $lo
 /*---------------------------------------------------------------------------------------*/
 /*                                    Interceptors                                       */
 /*---------------------------------------------------------------------------------------*/
-app.factory('authInterceptor', function(API_PREFIX, auth) { 
+app.factory('authInterceptor', function(API_PREFIX, jwtTokenService) { 
     return { 
         request: function(config) {  // automatically attach auth header
-            var token = auth.getToken();
+            var token = jwtTokenService.getToken();
             if(config.url.indexOf(API_PREFIX) === 0 && token) {
                 config.headers['x-access-token'] = token;
             }
@@ -147,7 +176,7 @@ app.factory('authInterceptor', function(API_PREFIX, auth) {
         },
         response: function(res) { // if a token was received, save it
             if(res.config.url.indexOf(API_PREFIX) === 0 && res.data.token) {
-                auth.saveToken(res.data.token);
+                jwtTokenService.saveToken(res.data.token);
             }
             return res;
         },
@@ -180,15 +209,17 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
     $httpProvider.interceptors.push('authInterceptor');
 
     /* */
-    var requiresAuth = ['$q', '$location', 'auth', function($q, $location, auth) {
+    var requiresAuth = ['$q', '$rootScope', '$location', 'profileService', function($q, $rootScope, $location, profileService) {
         // Initialize a new promise
         var deferred = $q.defer(); 
 
-        if (auth.isAuthed()) {
+        if (profileService.isAuthed()) {
             deferred.resolve();
+            $rootScope.authed = true;
         } else {
             $location.url('/login');
             deferred.reject();
+            $rootScope.authed = false;
         }
 
         return deferred.promise;
@@ -201,8 +232,8 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         controller: 'IndexCtrl',
         resolve: {
             authPromise: requiresAuth,
-            profile: ['profile', function(profile) {
-              return profile.getProfile();
+            profile: ['profileService', function(profileService) {
+              return profileService.getProfile();
             }]
         }
     })    
@@ -263,8 +294,8 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
     })
     .state('logout', {
         url: '/logout',
-        controller: function($scope, $rootScope, $location, auth) {
-            auth.logout();
+        controller: function($scope, $rootScope, $location, profileService) {
+            profileService.logout();
             $rootScope.message = 'Succesfully logged out!';
             $location.url('/login');
         }
@@ -338,7 +369,6 @@ app.controller('WishdetailCtrl', [
     'wish',
     function($rootScope, $scope, wishesService, wish) {
         $rootScope.title = 'Wish details';
-        console.log("I'm here with" + wish);
         $scope.wish = wish;
     }
 ]);
@@ -368,53 +398,41 @@ app.controller('GiftsCtrl', [
 app.controller('UserCtrl', [
     '$rootScope',
     '$scope',
-    '$http',
     '$location',
-    'auth',
-    'profile',
-    'API_PREFIX',
-    function($rootScope, $scope, $http, $location, auth, profile, API_PREFIX) {
+    'profileService',
+    function($rootScope, $scope, $location, profileService) {
         // Redirect if user is authed:
-        if (auth.isAuthed()) {
-            $scope.user = profile.getProfile();
+        if (profileService.isAuthed())
             $location.url('/');
-        }
-        else // not logged in, so should display the login form
-            $scope.user = {};
 
         $scope.login = function () {
-            $http.post(API_PREFIX + 'users/login', {
-                username: $scope.user.username,
-                password: $scope.user.password,
-            })
-            .success(function(user){
+            profileService
+              .login($scope.user.username, $scope.user.password)
+              .success(function(user){
                 // No error: authentication OK
                 $rootScope.message = 'Authentication successful!';
                 $location.url('/');
-            })
-            .error(function(){
+              })
+              .error(function(){
                 // Error: authentication failed
                 $rootScope.message = 'Incorrect username or password!';
                 $location.url('/login');
-            });
+              });
         };
 
         $scope.register = function () {
-            $http.post(API_PREFIX + 'users/register', {
-                username: $scope.user.username,
-                password: $scope.user.password,
-            })
-            .success(function(user){
+            profileService
+              .register($scope.user.username, $scope.user.password)
+              .success(function(user){
                 // No error: authentication OK
                 $rootScope.message = 'Registration successful!';
                 $location.url('/');
-            })
-            .error(function(){
+              })
+              .error(function(){
                 // Error: authentication failed
                 $rootScope.message = 'Registration failed!';
                 $location.url('/register');
-            });
+              });
         };
-
     }
 ]);
