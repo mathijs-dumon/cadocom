@@ -50,23 +50,11 @@ router.post('/wishes/create', function(req, res, next) {
   });
 });
 
-// Get own wishes
-router.get('/wishes/list/self', function(req, res, next) {
-  Gift
-    .find({ 'owner': req.user._id })
-    .select('-donor')
-    .exec(
-      function(err, wishes){
-       if (err) { return next(err); }
-       res.json(wishes);
-      }
-    );
-});
-
 // Get another user's wishes
 router.get('/wishes/list/:foruser', function(req, res, next) {
   Gift
     .find({ 'owner': req.foruser._id })
+    .select(req.foruser._id.equals(req.user._id) ? '-donor -isDonated' : '')
     .exec(
       function(err, wishes){
         if (err) { return next(err); }
@@ -81,12 +69,12 @@ router.get('/wishes/:gift', function(req, res) {
 });
 
 // Donate a wish (makes it a gift)
-router.post('/wishes/:gift/donate', function(req, res, next) {
+router.get('/wishes/:gift/donate', function(req, res, next) {
   if (req.gift.owner.equals(req.user._id))
-     return next(new Error('can\'t give your own whish'));
+     return next(new Error('can\'t donate your own whish'));
   else {
-    req.gift._donor = req.user._id;
-    req.save(function(err, wish){
+    req.gift.donor = req.user._id;
+    req.gift.save(function(err, wish){
       if (err) { return next(err); }
       res.json(wish);
     });
@@ -101,7 +89,20 @@ router.get('/wishes/:gift/delete', function(req, res) {
   return res.json({ message: 'Successfully deleted wish.' });
 });
 
-// List own gifts:
+// Undonate a wish (= remove a gift but keep the wish)
+router.get('/gifts/:gift/undonate', function(req, res, next) {
+  if (req.gift.owner.equals(req.user._id))
+     return next(new Error('can\'t undonate your own whish'));
+  else {
+    req.gift.donor = undefined;
+    req.gift.save(function(err, wish){
+      if (err) { return next(err); }
+      res.json(wish);
+    });
+  }
+});
+
+// List all gifts
 router.get('/gifts/list', function(req, res, next) {
   Gift
     .find({ 'donor': req.user._id })
@@ -113,6 +114,7 @@ router.get('/gifts/list', function(req, res, next) {
     );
 });
 
+// Get a single gift
 router.get('/gifts/:gift', function(req, res) {
   res.json(req.gift);
 });

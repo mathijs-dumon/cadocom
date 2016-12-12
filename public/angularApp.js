@@ -44,6 +44,11 @@ app.factory('giftsService', ['$http', 'API_PREFIX', function($http, API_PREFIX){
             return res.data;
         });
     };
+    o.undonate = function(id) {
+        return $http.get(API_PREFIX + 'gifts/' + id + "/undonate").then(function(res) {
+            return res.data;
+        });
+    };
     return o;
 }]);
 
@@ -52,16 +57,7 @@ app.factory('giftsService', ['$http', 'API_PREFIX', function($http, API_PREFIX){
 /*---------------------------------------------------------------------------------------*/
 app.factory('wishesService', ['$http', 'API_PREFIX', function($http, API_PREFIX){
     var o = {};
-    o.create = function(wish) {
-        return $http.post(API_PREFIX + 'wishes/create', wish).success(function(data){
-            return true;
-        });
-    };
-    o.delete = function(id) {
-        return $http.get(API_PREFIX + 'wishes/' + id + '/delete').then(function(res){
-            return true;
-        });
-    };
+
     o.getAll = function(userid) {
         if (!userid)
             userid = 'self';
@@ -69,11 +65,23 @@ app.factory('wishesService', ['$http', 'API_PREFIX', function($http, API_PREFIX)
             return res.data;
         });
     };
+
+    o.create = function(wish) {
+        return $http.post(API_PREFIX + 'wishes/create', wish).success(function(data){
+            return true;
+        });
+    };
     o.get = function(id) {
         return $http.get(API_PREFIX + 'wishes/' + id).then(function(res) {
             return res.data;
         });
     };
+    o.delete = function(id) {
+        return $http.get(API_PREFIX + 'wishes/' + id + '/delete').then(function(res){
+            return true;
+        });
+    };
+
     o.donate = function(id) {
         return $http.get(API_PREFIX + 'wishes/' + id + "/donate").then(function(res) {
             return res.data;
@@ -143,7 +151,7 @@ app.factory('profileService', [ '$rootScope', '$http', 'jwtTokenService', 'API_P
             username: username,
             password: password,
         })
-        .success(function(user){
+        .success(function(){
             // No error: authentication OK
             $rootScope.authed = true;
         })
@@ -160,15 +168,16 @@ app.factory('profileService', [ '$rootScope', '$http', 'jwtTokenService', 'API_P
     };
 
     o.register = function(username, password) {
-        $http.post(API_PREFIX + 'users/register', {
+        return $http.post(API_PREFIX + 'users/register', {
             username: username,
             password: password,
         });
     };
 
     o.unregister = function() {
-        $http.post(API_PREFIX + 'users/unregister');
-        o.logout();
+        return $http.post(API_PREFIX + 'users/unregister').succes(function() {
+            o.logout();    
+        });
     }
 
     return o;
@@ -258,6 +267,9 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
             wishes: ['wishesService', '$stateParams', function(wishesService, $stateParams) {
                 return wishesService.getAll($stateParams['userId']);
             }],
+            profile: ['profileService', '$stateParams', function(profileService, $stateParams) {
+              return profileService.getProfile($stateParams['id']);
+            }],
             authPromise: requiresAuth
         }
     })
@@ -277,8 +289,15 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         templateUrl: '/views/giftlist.html',
         controller: 'GiftlistCtrl',
         resolve: {
-            gifts: ['giftsService', function(giftsService) {
-                return giftsService.getAll();
+            gifts: ['giftsService', 'profileService', function(giftsService, profileService) {
+                return giftsService.getAll().then(function(gifts) {
+                    angular.forEach(gifts, function(value, key) {
+                        profileService.getProfile(key.owner).then(function(profile) {
+                            value.username = profile.local.username;
+                        });
+                    });
+                    return gifts;
+                });;
             }],
             authPromise: requiresAuth
         }
@@ -311,8 +330,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         controller: 'ProfiledetailCtrl',
         resolve: {
             profile: ['$stateParams', 'profileService', function($stateParams, profileService) {
-              var profile = profileService.getProfile($stateParams['id']);
-              return profile;
+              return profileService.getProfile($stateParams['id']);
             }],
             authPromise: requiresAuth,
         }
@@ -362,15 +380,18 @@ app.controller('WishlistCtrl', [
     '$stateParams',
     'wishesService',
     'wishes',
-    function($rootScope, $scope, $state, $stateParams, wishesService, wishes) {
+    'profile',
+    function($rootScope, $scope, $state, $stateParams, wishesService, wishes, profile) {
         $rootScope.title = 'Wishlist';
         $scope.wishes = wishes;
 
-        if ($stateParams['userId']=='self') {
-            $scope.canAddWishes = true;
+        if ($stateParams['userId']=='self' || $stateParams['userId']=='' || $stateParams['userId']==profile._id) {
+            $scope.isOwner = true;
+            $scope.username = "Your";
         }
         else {
-            $scope.canAddWishes = false;
+            $scope.isOwner = false;
+            $scope.username = profile.local.username;
         }
 
         $scope.addWish = function() {
@@ -392,6 +413,12 @@ app.controller('WishlistCtrl', [
                 $state.reload();
             });
         };
+
+        $scope.donateWish = function(id) {
+            wishesService.donate(id).then(function() {
+                $state.reload();
+            });
+        };
     }
 ]);
 
@@ -409,20 +436,30 @@ app.controller('WishdetailCtrl', [
 app.controller('GiftlistCtrl', [
     '$rootScope',
     '$scope',
+    '$state',
     'giftsService',
+    'profileService',
     'gifts',
-    function($rootScope, $scope, giftsService, gifts) {
+    function($rootScope, $scope, $state, giftsService, profileService, gifts) {
         $rootScope.title = 'Giftlist';
         $scope.gifts = gifts;
+
+        $scope.deleteGift = function(id) {
+            giftsService.undonate(id).then(function() {
+                $state.reload();
+            });
+        };
+        
     }
 ]);
 
-app.controller('GiftsCtrl', [
+app.controller('GiftdetailCtrl', [
     '$rootScope',
     '$scope',
     'giftsService',
+    'profileService',
     'gift',
-    function($rootScope, $scope, giftsService, gift) {
+    function($rootScope, $scope, giftsService, profileService, gift) {
         $rootScope.title = 'Gift details';
         $scope.gift = gift;
     }

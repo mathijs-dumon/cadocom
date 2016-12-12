@@ -1,4 +1,4 @@
-      <h1>Your wishlist:</h1>
+      <h1>{{username}} wishlist:</h1>
 
       <div ng-repeat="t in wishes" class="container">
         <h3 class="col-md-9"><a ui-sref="wishdetail({ id: t._id })" title="View details for {{t.title}}">
@@ -6,15 +6,20 @@
           </a>
         </h3>
         <div class="col-md-3"><div class="btn-group pull-right" role="group">
-          <button type="button" class="btn btn-default" ng-click="deleteWish(t._id)">
+          <button title="Delete this wish" ng-show="isOwner" type="button" class="btn btn-default" ng-click="deleteWish(t._id)">
             <i class="fa fa-times"></i>
           </button>
-          <button type="button" class="btn btn-default" >
+          <button title="Edit this wish" ng-show="isOwner" type="button" class="btn btn-default" >
             <i class="fa fa-pencil-square-o"></i>
+          </button>
+          <button title="I'm going to get this!" ng-show="!isOwner && !(t.isDonated==undefined || t.isDonated)" type="button" class="btn btn-default" ng-click="donateWish(t._id)">
+            <i class="fa fa-check"></i>
+          </button>
+          <button title="Somebody else is getting this!" ng-show="!t.isDonated==undefined && t.isDonated" type="button" disabled class="btn btn-default">
+            <i class="fa fa-check"></i>
           </button>
         </div></div>
       </div>
-
       <div ng-hide="wishes.length"  class="container">
         <p>
           No wishes found!
@@ -23,7 +28,7 @@
 
       <hr />
 
-      <form ng-show="canAddWishes" ng-submit="addWish()" style="margin-top:30px;">
+      <form ng-show="isOwner" ng-submit="addWish()" style="margin-top:30px;">
         <h3>Add a new whish</h3>
 
         <div class="form-group">
