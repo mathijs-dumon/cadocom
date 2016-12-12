@@ -35,10 +35,13 @@
               <a class="nav-link" href="#" ui-sref="index" ui-sref-active="active">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#" ui-sref="wishlist" ui-sref-active="active">Wishlist</a>
+              <a class="nav-link" href="#" ui-sref="wishlist({userId:'self'})" ui-sref-opts="{reload:true}" ui-sref-active="active">Wishlist</a>
             </li> 
             <li class="nav-item">
               <a class="nav-link" href="#" ui-sref="giftlist" ui-sref-active="active">Giftlist</a>
+            </li> 
+            <li class="nav-item">
+              <a class="nav-link" href="#" ui-sref="profilelist" ui-sref-active="active">Profiles</a>
             </li> 
           </ul>
         </div>

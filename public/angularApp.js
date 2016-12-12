@@ -63,7 +63,7 @@ app.factory('wishesService', ['$http', 'API_PREFIX', function($http, API_PREFIX)
         });
     };
     o.getAll = function(userid) {
-        if (userid == undefined)
+        if (!userid)
             userid = 'self';
         return $http.get(API_PREFIX + 'wishes/list/' + userid).then(function(res){
             return res.data;
@@ -114,8 +114,16 @@ app.factory('jwtTokenService', [ '$window', function($window) {
 app.factory('profileService', [ '$rootScope', '$http', 'jwtTokenService', 'API_PREFIX', function($rootScope, $http, jwtTokenService, API_PREFIX) {
     var o = { };
 
-    o.getProfile = function() {
-        return $http.get(API_PREFIX + 'users/profile').then(function(res) {
+    o.getProfiles = function() {
+        return $http.get(API_PREFIX + 'users/list').then(function(res) {
+            return res.data;
+        });
+    };
+
+    o.getProfile = function(id) {
+        if (!id)
+            id = 'self';
+        return $http.get(API_PREFIX + 'users/get/' + id).then(function(res) {
             return res.data;
         });
     };
@@ -156,6 +164,11 @@ app.factory('profileService', [ '$rootScope', '$http', 'jwtTokenService', 'API_P
             username: username,
             password: password,
         });
+    };
+
+    o.unregister = function() {
+        $http.post(API_PREFIX + 'users/unregister');
+        o.logout();
     }
 
     return o;
@@ -238,10 +251,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         }
     })    
     .state('wishlist', {
-        url: '/wishlist',
-        params: {
-            userId: null
-        },
+        url: '/wishlist/{userId}',
         templateUrl: '/views/wishlist.html',
         controller: 'WishlistCtrl',
         resolve: {
@@ -257,7 +267,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         controller: 'WishdetailCtrl',
         resolve: {
             wish: ['wishesService', '$stateParams', function(wishesService, $stateParams) {
-                return wishesService.get($stateParams['id']);;
+                return wishesService.get($stateParams['id']);
             }],
             authPromise: requiresAuth
         } 
@@ -274,7 +284,7 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
         }
     })
     .state('giftdetail', {
-        url: '/gifts/{id}',
+        url: '/giftdetail/{id}',
         templateUrl: '/views/giftdetail.html',
         controller: 'GiftdetailCtrl',
         resolve: {
@@ -284,11 +294,26 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
             authPromise: requiresAuth
         } 
     })
-    .state('profile', {
-        url: '/profile',
-        templateUrl: '/views/profile.html',
-        controller: 'UserCtrl',
+    .state('profilelist', {
+        url: '/profilelist',
+        templateUrl: '/views/profilelist.html',
+        controller: 'ProfilelistCtrl',
         resolve: {
+            profiles: ['profileService', function(profileService) {
+              return profileService.getProfiles();
+            }],
+            authPromise: requiresAuth,
+        }
+    })
+    .state('profile', {
+        url: '/profile/{id}',
+        templateUrl: '/views/profile.html',
+        controller: 'ProfiledetailCtrl',
+        resolve: {
+            profile: ['$stateParams', 'profileService', function($stateParams, profileService) {
+              var profile = profileService.getProfile($stateParams['id']);
+              return profile;
+            }],
             authPromise: requiresAuth,
         }
     })
@@ -303,12 +328,12 @@ function($stateProvider, $urlRouterProvider, $httpProvider) {
     .state('login', {
         url: '/login',
         templateUrl: '/views/login.html',
-        controller: 'UserCtrl'
+        controller: 'AuthCtrl'
     })
     .state('register', {
         url: '/register',
         templateUrl: '/views/register.html',
-        controller: 'UserCtrl'
+        controller: 'AuthCtrl'
     });;
 
     $urlRouterProvider.otherwise('login');
@@ -334,11 +359,19 @@ app.controller('WishlistCtrl', [
     '$rootScope',
     '$scope',
     '$state',
+    '$stateParams',
     'wishesService',
     'wishes',
-    function($rootScope, $scope, $state, wishesService, wishes) {
+    function($rootScope, $scope, $state, $stateParams, wishesService, wishes) {
         $rootScope.title = 'Wishlist';
         $scope.wishes = wishes;
+
+        if ($stateParams['userId']=='self') {
+            $scope.canAddWishes = true;
+        }
+        else {
+            $scope.canAddWishes = false;
+        }
 
         $scope.addWish = function() {
             wishesService.create({
@@ -395,12 +428,14 @@ app.controller('GiftsCtrl', [
     }
 ]);
 
-app.controller('UserCtrl', [
+app.controller('AuthCtrl', [
     '$rootScope',
     '$scope',
     '$location',
     'profileService',
     function($rootScope, $scope, $location, profileService) {
+        $rootScope.title = 'Welcome';
+
         // Redirect if user is authed:
         if (profileService.isAuthed())
             $location.url('/');
@@ -434,5 +469,32 @@ app.controller('UserCtrl', [
                 $location.url('/register');
               });
         };
+    }
+]);
+
+app.controller('ProfilelistCtrl', [
+    '$rootScope',
+    '$scope',
+    'profiles',
+    function($rootScope, $scope, profiles) {
+        $rootScope.title = 'User Profiles';
+        $scope.profiles = profiles;
+    }
+]);
+
+
+app.controller('ProfiledetailCtrl', [
+    '$rootScope',
+    '$scope',
+    '$state',
+    'profile',
+    function($rootScope, $scope, $state, profile) {
+        $rootScope.title = 'User Profile';
+        $scope.profile = profile;
+
+        $scope.unregister = function() {
+            profileService.unregister();
+            $state.reload();
+        }
     }
 ]);

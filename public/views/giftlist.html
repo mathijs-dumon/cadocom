@@ -1,9 +1,14 @@
       <h1>Your giftlist:</h1>
 
-      <div ng-repeat="gift in gifts">
-          <a href="#/gifts/{{gift._id}}" title="View details for {{ gift.title }}"><h3>
-            {{gift.title}}
-          </h3></a>
+      <div ng-repeat="t in gifts">
+        <h3 class="col-md-9"><a ui-sref="giftdetail({ id: t._id })" title="View details for {{t.title}}">
+            {{t.title}}
+          </a>
+        </h3>
       </div>
-
-      <div ng-hide="gifts.length">No gifts found!</div>
+      
+      <div ng-hide="gifts.length"  class="container">
+        <p>
+          No gifts found!
+        </p>
+      </div>

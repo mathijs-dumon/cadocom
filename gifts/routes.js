@@ -7,22 +7,20 @@ var Gift = mongoose.model('Gift');
 var User = mongoose.model('User');
 
 router.param('foruser', function(req, res, next, id) {
-
   if (id == 'self')
     id = req.user._id;
+  User
+    .findById(id)
+    .select('local.username _id')
+    .exec(
+      function (err, foruser) {
+        if (err) { return next(err); }
+        if (!foruser) { return next(new Error('can\'t find foruser')); }
 
-  var query = User.findById(id);
-
-  query.exec(function (err, foruser){
-    if (err) { return next(err); }
-    if (!foruser) { return next(new Error('can\'t find foruser')); }
-    if (foruser._id.equals(req.user._id)) {
-      return next(new Error('can\'t query using your own user id')); 
-    }
-
-    req.foruser = foruser;
-    return next();
-  });
+        req.foruser = foruser;
+        return next();
+      }
+    );
 });
 
 router.param('gift', function(req, res, next, id) {

@@ -61,7 +61,7 @@ router.get('/connect/facebook/callback', function(req, res, next) {
 /*---------------------------------------------------------------------------------------*/
 /*                                    REMOVE ACCOUNT                                     */
 /*---------------------------------------------------------------------------------------*/
-router.get('/unlink', jwtTokenMiddleware, function(req, res) {
+router.get('/unregister', jwtTokenMiddleware, function(req, res) {
   var user            = req.user;
   user.remove();
 });
@@ -69,32 +69,49 @@ router.get('/unlink', jwtTokenMiddleware, function(req, res) {
 /*---------------------------------------------------------------------------------------*/
 /*                                       LIST                                            */
 /*---------------------------------------------------------------------------------------*/
-/*router.get('/list', function(req, res, next){
-  User.find(function(err, users){
-    if (err) { return next(err); }
-    res.json(users);
-  });
-});*/
+router.get('/list', jwtTokenMiddleware, function(req, res, next) {
+  // Get a list of usernames and id's
+  User
+    .find()
+    .select('local.username _id')
+    .exec(
+      function(err, users){
+        if (err) { return next(err); }
+        res.json(users);
+      }
+    );
+});
 
-router.get('/query', jwtTokenMiddleware, function(req, res, next){
+router.get('/get/:foruser', jwtTokenMiddleware, function(req, res, next) {
+  var id = req.params.foruser;
+  if (id == 'self')
+    id = req.user.id;
+  User
+    .findById(id)
+    .select('-local.password -local.salt')
+    .exec(
+      function (err, foruser) {
+        if (err) { return next(err); }
+        if (!foruser) { return next(new Error('can\'t find foruser')); }
+
+        res.json(foruser);
+      }
+    );
+});
+
+router.post('/query', jwtTokenMiddleware, function(req, res, next) {
+  // Get a profile with a specific username
   var query = req.body.query;
   User
    .find({ 'local.username': new RegExp('^'+query+'$', "i") })
    .select('-local.password -local.salt -gifts')
-   .run(
+   .exec(
       function(err, users){
         if (err) { return next(err); }
         res.json(users);
       }
     );
 })
-
-/*---------------------------------------------------------------------------------------*/
-/*                               Get profile information                                 */
-/*---------------------------------------------------------------------------------------*/
-router.get('/profile', function(req, res, next) {
-  res.json(req.user);
-});
 
 /*---------------------------------------------------------------------------------------*/
 /*                                    LOGGED IN TEST                                     */

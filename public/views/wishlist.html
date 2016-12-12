@@ -17,13 +17,13 @@
 
       <div ng-hide="wishes.length"  class="container">
         <p>
-          No gifts found!
+          No wishes found!
         </p>
       </div>
 
       <hr />
 
-      <form ng-submit="addWish()" style="margin-top:30px;">
+      <form ng-show="canAddWishes" ng-submit="addWish()" style="margin-top:30px;">
         <h3>Add a new whish</h3>
 
         <div class="form-group">
