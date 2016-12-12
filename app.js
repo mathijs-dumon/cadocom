@@ -28,11 +28,6 @@ require('./users/init')(app);
 
 // Setup routes:
 
-/* GET home page => angularApp */
-app.get('/', function(req, res, next) {
-  res.render('index', {});
-});
-
 /* API ROUTES: */
 var users = require('./users/routes');
 app.use('/api/users', users);
@@ -57,6 +52,12 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render('error');
+});
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
 });
 
 module.exports = app;
