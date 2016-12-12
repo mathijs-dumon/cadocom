@@ -1,11 +1,8 @@
 class IndexCtrl {
-  constructor(AppConstants, $rootScope, $scope, profile) {
+  constructor(currentProfile) {
     'ngInject';
 
-    this.appName = AppConstants.appName;
-    $rootScope.title = 'Home';
-    $scope.profile = profile;
-
+    this.currentProfile = currentProfile;
   }
 
 

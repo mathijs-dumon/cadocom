@@ -1,33 +1,64 @@
 
-export class GiftlistCtrl {
-  constructor($rootScope, $scope, $state, GiftsService, gifts) {
-    'ngInject';
+class WishlistCtrl {
+    constructor($scope, $state, WishesService, wishes, profile, currentProfile) {
+        'ngInject';
 
-    this._$rootScope = $rootScope;
-    this._$scope = $scope;
-    this._$location = $location;
-    this.GiftsService = GiftsService;
+        this._$scope = $scope;
+        this._$state = $state;
+        this.WishesService = WishesService;
 
-    this._$rootScope.title = 'Giftlist';
-    this._$scope.gifts = gifts;
-  }
+        this.wishes = wishes;
 
-    deleteGift(id) {
-        this.GiftsService.undonate(id).then(function() {
+        this.currentProfile = currentProfile;
+
+        if (profile._id==currentProfile._id) {
+            this.isOwner = true;
+            this.username = "Your";
+        }
+        else {
+            this.isOwner = false;
+            this.username = profile.local.username;
+        }
+    }
+
+    addWish() {
+        return this.WishesService.create({
+            title: this._$scope.wishtitle,
+            link: this._$scope.link,
+            description: this._$scope.description,
+        }).then(() => {
+            this._$scope.title = '';
+            this._$scope.link = '';
+            this._$scope.description = '';
+
+            this._$state.reload();                
+        });
+    };
+
+    deleteWish(id) {
+        return this.WishesService.delete(id).then(() => {
             this._$state.reload();
         });
     };  
 
+    donateWish(id) {
+        return this.WishesService.donate(id).then(() => {
+            this._$state.reload();
+        });
+    };
+
 };
 
-export class GiftdetailCtrl {
-  constructor($rootScope, $scope, gift) {
+class WishdetailCtrl {
+  constructor(wish, currentProfile) {
     'ngInject';
 
-    this._$rootScope = $rootScope;
-    this._$scope = $scope;
-
-    this._$rootScope.title = 'Gift details';
-    this._$scope.gift = gift;
+    this.wish = wish;
+    this.currentProfile = currentProfile;
   }
 };
+
+export {
+    WishlistCtrl,
+    WishdetailCtrl
+}

@@ -1,10 +1,10 @@
 <div class="panel panel-default">
   <div class="panel-heading">
-    <span class="pull-right">Need an account? <a href="#" ui-sref="register">Register</a>!</span>
+    <span class="pull-right">Need an account? <a href="#" ui-sref="app.register">Register</a>!</span>
     Sign in
   </div>
   <div class="panel-body">
-    <form class="form-horizontal" ng-submit="login()">
+    <form class="form-horizontal" ng-submit="$ctrl.login()">
       <div ng-show="message" class="alert alert-danger row">
         <span>{{ message }}</span>
       </div>

@@ -13,7 +13,7 @@ export default class WishesService {
         if (!userid)
             userid = 'self';
         return this._$http.get(
-            this._AppConstants.api + 'wishes/list'  + userid
+            this._AppConstants.api + 'wishes/list/'  + userid
         ).then( (res) => res.data );
     }
 
@@ -32,13 +32,13 @@ export default class WishesService {
 
     delete(id) {
         return this._$http.get(
-            this._AppConstants.api + 'gifts/' + id + "/delete"
+            this._AppConstants.api + 'wishes/' + id + "/delete"
         ).then( (res) => res.data );
     }
 
     donate(id) {
         return this._$http.get(
-            this._AppConstants.api + 'gifts/' + id + "/donate"
+            this._AppConstants.api + 'wishes/' + id + "/donate"
         ).then( (res) => res.data );
     }
 }

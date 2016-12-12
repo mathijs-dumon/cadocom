@@ -5,20 +5,22 @@ function ProfileConfig($stateProvider) {
         .state('app.profilelist', {
             url: '/profilelist',
             templateUrl: 'profilelist.html',
-            controller: 'ProfilelistCtrl',
+            controller: 'ProfilelistCtrl as $ctrl',
             resolve: {
                 profiles: (ProfileService) => ProfileService.getProfiles(),
-                authPromise: (ProfileService) => ProfileService.RequiresAuth(),
-            }
+                currentProfile: (ProfileService) => ProfileService.requiresAuth(),
+            },
+            title: 'User Profiles'
         })
-        .state('app.profile', {
+        .state('app.profiledetail', {
             url: '/profile/{id}',
             templateUrl: 'profile.html',
-            controller: 'ProfiledetailCtrl',
+            controller: 'ProfiledetailCtrl as $ctrl',
             resolve: {
                 profile: (ProfileService, $stateParams) => ProfileService.getProfile($stateParams['id']),
-                authPromise: (ProfileService) => ProfileService.RequiresAuth(),
-            }
+                currentProfile: (ProfileService) => ProfileService.requiresAuth(),
+            },
+            title: 'User Profile'
         });
 }
 

@@ -9,10 +9,8 @@ wishModule.config(WishConfig);
 
 
 // Controllers
-import WishlistCtrl from './wish.controller';
+import { WishlistCtrl, WishdetailCtrl } from './wish.controller';
 wishModule.controller('WishlistCtrl', WishlistCtrl);
-
-import WishdetailCtrl from './wish.controller';
 wishModule.controller('WishdetailCtrl', WishdetailCtrl);
 
 

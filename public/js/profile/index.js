@@ -9,10 +9,8 @@ profileModule.config(ProfileConfig);
 
 
 // Controllers
-import ProfilelistCtrl from './profile.controller';
+import { ProfilelistCtrl, ProfiledetailCtrl } from './profile.controller';
 profileModule.controller('ProfilelistCtrl', ProfilelistCtrl);
-
-import ProfiledetailCtrl from './profile.controller';
 profileModule.controller('ProfiledetailCtrl', ProfiledetailCtrl);
 
 

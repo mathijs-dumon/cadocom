@@ -6,29 +6,22 @@ function GiftConfig($stateProvider) {
         .state('app.giftlist', {
             url: '/giftlist',
             templateUrl: 'giftlist.html',
-            controller: 'GiftlistCtrl',
+            controller: 'GiftlistCtrl as $ctrl',
             resolve: {
-                gifts: (GiftsService, ProfileService) => {
-                    GiftsService.getAll().then( (gifts) => {
-                        angular.forEach(gifts, (value, key) => {
-                            ProfileService.getProfile(key.owner).then(
-                                (profile) => { value.username = profile.local.username; }
-                            );
-                        })
-                        return gifts;
-                    });
-                },
-                authPromise: (ProfileService) => ProfileService.RequiresAuth(),
-            }
+                gifts: (GiftsService) => GiftsService.getAllWithUsername(),
+                currentProfile: (ProfileService) => ProfileService.requiresAuth(),
+            },
+            title: 'Giftlist'
         })
         .state('app.giftdetail', {
             url: '/giftdetail/{id}',
             templateUrl: 'giftdetail.html',
-            controller: 'GiftdetailCtrl',
+            controller: 'GiftdetailCtrl as $ctrl',
             resolve: {
                 gift: (GiftsService, $stateParams) => GiftsService.getGift($stateParams['id']),
-                authPromise: (ProfileService) => ProfileService.RequiresAuth(),
-            } 
+                currentProfile: (ProfileService) => ProfileService.requiresAuth(),
+            },
+            title: 'Gift details'
         });
 }
 

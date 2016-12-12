@@ -2,12 +2,12 @@
       <div class="container-fluid">
         <div class="navbar-header">
           <a class="navbar-brand" href="#">CadoCom</a>
-          <ul class="nav navbar-nav navbar-left">
+          <ul class="nav navbar-nav navbar-left" ng-show="$ctrl.isAuthed">
             <li class="nav-item">
               <a class="nav-link" href="#" ui-sref="app.index" ui-sref-active="active">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#" ui-sref="app.wishlist({userId:'self'})" ui-sref-opts="{reload:true}" ui-sref-active="active">Wishlist</a>
+              <a class="nav-link" href="#" ui-sref="app.wishlist()" ui-sref-opts="{reload:true}" ui-sref-active="active">Wishlist</a>
             </li> 
             <li class="nav-item">
               <a class="nav-link" href="#" ui-sref="app.giftlist" ui-sref-active="active">Giftlist</a>
@@ -18,13 +18,12 @@
           </ul>
         </div>
 
-        <div style="float: right">
+        <div style="float: right" ng-show="$ctrl.isAuthed">
           <ul class="nav navbar-nav navbar-right">
             <li class="nav-item">
-              <a class="nav-link" href="#" ui-sref="app.profile" ui-sref-active="active">Profile</a>
-            </li> 
-
-            <li class="nav-item" ng-show="authed">
+              <a class="nav-link" href="#" ui-sref="app.profiledetail()" ui-sref-active="active">Profile</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="#" ui-sref="app.logout" ui-sref-active="active">Logout <i class="fa fa-sign-in" aria-hidden="true"></i></a>
             </li> 
           </ul>

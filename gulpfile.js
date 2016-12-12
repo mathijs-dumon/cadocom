@@ -13,7 +13,7 @@ var merge         = require('merge-stream');
 // Where our files are located
 var jsFiles   = "public/js/**/*.js";
 var viewFiles = "public/views/**/*.html";
-var cssFiles = "public/stylesheets/**/*.css";
+var styleFiles = "public/stylesheets/**/*.+(css|otf|eot|ttf|svg|woff|woff2)";
 
 var interceptErrors = function(error) {
   var args = Array.prototype.slice.call(arguments);
@@ -47,8 +47,8 @@ gulp.task('html', function() {
       .pipe(gulp.dest('./build/'));
 });
 
-gulp.task('css', function() {
-  return gulp.src(cssFiles)
+gulp.task('style', function() {
+  return gulp.src(styleFiles)
       .pipe(gulp.dest('./build/stylesheets/'));
 });
 
@@ -75,7 +75,7 @@ gulp.task('build', ['html', 'browserify'], function() {
   return merge(html,js);
 });
 
-gulp.task('default', ['html', 'css', 'browserify'], function() {
+gulp.task('default', ['html', 'style', 'browserify'], function() {
 
   browserSync.init(['./build/**/**.**'], {
     server: "./build",
@@ -88,6 +88,6 @@ gulp.task('default', ['html', 'css', 'browserify'], function() {
 
   gulp.watch("public/index.html", ['html']);
   gulp.watch(viewFiles, ['views']);
-  gulp.watch(cssFiles, ['css']);
+  gulp.watch(styleFiles, ['style']);
   gulp.watch(jsFiles, ['browserify']);
 });

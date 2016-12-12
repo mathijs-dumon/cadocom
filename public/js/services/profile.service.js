@@ -3,8 +3,8 @@ export default class ProfileService {
     constructor(AppConstants, JwtTokenService, $location, $rootScope, $http, $q) {
         'ngInject';
 
-        this._AppConstants = AppConstants;
-        this._JwtTokenService = JwtTokenService;
+        this.AppConstants = AppConstants;
+        this.JwtTokenService = JwtTokenService;
         this._$q = $q;
         this._$http = $http;
         this._$rootScope = $rootScope;
@@ -13,7 +13,7 @@ export default class ProfileService {
 
     getProfiles() {
         return this._$http.get(
-            this._AppConstants.api + 'users/list'
+            this.AppConstants.api + 'users/list'
         ).then( (res) => res.data );
     }
 
@@ -21,7 +21,7 @@ export default class ProfileService {
         if (!id)
             id = 'self';
         return this._$http.get(
-            this._AppConstants.api + 'users/get/' + id
+            this.AppConstants.api + 'users/get/' + id
         ).then( (res) => res.data );
     }
 
@@ -37,39 +37,39 @@ export default class ProfileService {
 
     login(username, password) {
         return this._$http.post(
-            this._AppConstants.api + 'users/login', {
+            this.AppConstants.api + 'users/login', {
                 username: username,
                 password: password,
             }
-        ).success(function(){
-            // No error: authentication OK
-            this._$rootScope.authed = true;
+        ).success( () => {
+            this._$rootScope.$broadcast('userLoggedIn');
         })
-        .error(function(){
+        .error( () => {
             // Error: authentication failed
             this.JwtTokenService.clearToken();
-            this._$rootScope.authed = false;
         });
     }
 
     logout() {
         this.JwtTokenService.clearToken();
-        this._$rootScope.authed = false;
+        this._$rootScope.$broadcast('userLoggedOut');
     }
 
     register(username, password) {
         return this._$http.post(
-            this._AppConstants.api + 'users/register', {
+            this.AppConstants.api + 'users/register', {
                 username: username,
                 password: password,
             }
-        );
+        ).success( () => {
+            this._$rootScope.$broadcast('userLoggedIn');
+        });
     }
 
     unregister() {
         return this._$http.post(
             this._AppConstants.api + 'users/unregister'
-        ).succes(function() {
+        ).succes(() => {
             this.logout()
         });
     }
@@ -79,15 +79,26 @@ export default class ProfileService {
         var deferred = this._$q.defer(); 
 
         if (this.isAuthed()) {
-            deferred.resolve();
-            this._$rootScope.authed = true;
+            deferred.resolve(this.getProfile());
         } else {
             this._$location.url('/login');
             deferred.reject();
-            this._$rootScope.authed = false;
         }
 
         return deferred.promise;
-    };
+    }
+
+    requiresProfile() {
+        // Initialize a new promise
+        var deferred = this._$q.defer(); 
+
+        if (this.isAuthed()) {
+            deferred.resolve(this.getProfile());
+        } else {
+            deferred.resolve(undefined);
+        }
+
+        return deferred.promise;
+    }
 
 };

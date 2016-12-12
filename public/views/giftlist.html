@@ -1,20 +1,20 @@
       <h1>Your giftlist:</h1>
 
-      <div ng-repeat="t in gifts">
+      <div ng-repeat="t in $ctrl.gifts">
         <h3 class="col-md-9">
-          <a ui-sref="giftdetail({ id: t._id })" title="View details for {{t.title}}">
+          <a ui-sref="app.giftdetail({ id: t._id })" title="View details for {{t.title}}">
             {{t.title}}
-          </a> - a wish from <a href="#" ui-sref="wishlist({id: t.owner})" title="Go to wish list">{{ t.username }}</a>
+          </a> - a wish from <a href="#" ui-sref="app.wishlist({id: t.owner})" title="Go to wish list">{{ t.username }}</a>
         </h3>
         <div class="col-md-3"><div class="btn-group pull-right" role="group">
-          <button title="Delete this gift" type="button" class="btn btn-default" ng-click="deleteGift(t._id)">
+          <button title="Delete this gift" type="button" class="btn btn-default" ng-click="$ctrl.deleteGift(t._id)">
             <i class="fa fa-times"></i>
           </button>
         </div></div>
       </div>
       </div>
       
-      <div ng-hide="gifts.length"  class="container">
+      <div ng-hide="$ctrl.gifts.length"  class="container">
         <p>
           No gifts found!
         </p>

@@ -4,8 +4,8 @@ import angular from 'angular';
 let layoutModule = angular.module('app.layout', []);
 
 // Components
-import AppHeader from './header.component';
+import { AppHeader, AppHeaderCtrl } from './header.component';
+layoutModule.controller('AppHeaderCtrl', AppHeaderCtrl);
 layoutModule.component('appHeader', AppHeader);
-
 
 export default layoutModule;

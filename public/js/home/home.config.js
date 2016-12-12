@@ -5,12 +5,12 @@ function HomeConfig($stateProvider) {
     $stateProvider
         .state('app.index', {
             url: '/',
-            controller: 'IndexCtrl',
+            controller: 'IndexCtrl  as $ctrl',
             templateUrl: 'home.html',
             resolve: {
-                authPromise: (ProfileService) => ProfileService.RequiresAuth,
-                profile: (ProfileService) => ProfileService.getProfile(),
-            }
+                currentProfile: (ProfileService) => ProfileService.requiresAuth(),
+            },
+            title: 'Home'
         });
 };
 

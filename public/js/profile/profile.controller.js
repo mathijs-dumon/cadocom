@@ -1,26 +1,21 @@
-export class ProfilelistCtrl {
-  constructor($rootScope, $scope, profiles) {
+class ProfilelistCtrl {
+  constructor(profiles, currentProfile) {
     'ngInject';
-
-    this._$rootScope = $rootScope;
-    this._$scope = $scope;
-
-    this._$rootScope.title = 'User Profiles';
-    this._$scope.profiles = profiles;
+    
+    this.profiles = profiles;
+    this.currentProfile = currentProfile;
   }
 };
 
-export class ProfiledetailCtrl {
-  constructor($rootScope, $scope, $state, ProfileService, profile) {
+class ProfiledetailCtrl {
+  constructor($state, ProfileService, profile, currentProfile) {
     'ngInject';
 
-    this._$rootScope = $rootScope;
-    this._$scope = $scope;
     this._$state = $state;
     this.ProfileService = ProfileService;
 
-    this._$rootScope.title = 'User Profile';
-    this._$scope.profile = profile;
+    this.profile = profile;
+    this.currentProfile = currentProfile;
   }
 
   unregister() {
@@ -28,3 +23,8 @@ export class ProfiledetailCtrl {
     this._$state.reload();
   }
 };
+
+export {
+  ProfilelistCtrl,
+  ProfiledetailCtrl
+}

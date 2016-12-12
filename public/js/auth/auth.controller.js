@@ -1,47 +1,52 @@
-export class AuthCtrl {
-  constructor($rootScope, $scope, $location, ProfileService) {
+class AuthCtrl {
+  constructor($rootScope, $scope, $state, ProfileService) {
     'ngInject';
 
     this._$rootScope = $rootScope;
     this._$scope = $scope;
-    this._$location = $location;
+    this._$state = $state;
     this.ProfileService = ProfileService;
-
-    this._$rootScope.title = 'Welcome';
 
     // Redirect if user is authed:
     if (this.ProfileService.isAuthed())
-        this.$location.url('/');
+        this._$location.url('/');
 
   }
 
   login() {
       this.ProfileService
         .login(this._$scope.user.username, this._$scope.user.password)
-        .success(function(user){
+        .success(() => {
           // No error: authentication OK
           this._$rootScope.message = 'Authentication successful!';
-          this._$location.url('/');
+          this._$state.go("app.index");
         })
-        .error(function(){
+        .error(() => {
           // Error: authentication failed
           this._$rootScope.message = 'Incorrect username or password!';
-          this._$location.url('/login');
+          this._$state.go("app.login");
         });
-  };
+  }
 
   register() {
-      this.ProfileService
-        .register(this._$scope.user.username, this._$scope.user.password)
-        .success(function(user){
-          // No error: authentication OK
-          this._$rootScope.message = 'Registration successful!';
-          this._$location.url('/');
-        })
-        .error(function(){
-          // Error: authentication failed
-          this._$rootScope.message = 'Registration failed!';
-          this._$location.url('/register');
-        });
-  };
+      if (this._$scope.user.password != this._$scope.user.password2) {
+        this._$rootScope.message = 'Passwords didn\'t match';
+        this._$state.go("app.register");
+      } else {        
+        this.ProfileService
+          .register(this._$scope.user.username, this._$scope.user.password)
+          .success(() => {
+            // No error: authentication OK
+            this._$rootScope.message = 'Registration successful!';
+            this._$state.go("app.index");
+          })
+          .error(() => {
+            // Error: authentication failed
+            this._$rootScope.message = 'Registration failed!';
+            this._$state.go("app.register");
+          });
+      }
+  }
 };
+
+export default AuthCtrl;

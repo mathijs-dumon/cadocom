@@ -9,10 +9,8 @@ giftModule.config(GiftConfig);
 
 
 // Controllers
-import GiftlistCtrl from './gift.controller';
+import { GiftlistCtrl, GiftdetailCtrl } from './gift.controller';
 giftModule.controller('GiftlistCtrl', GiftlistCtrl);
-
-import GiftdetailCtrl from './gift.controller';
 giftModule.controller('GiftdetailCtrl', GiftdetailCtrl);
 
 
