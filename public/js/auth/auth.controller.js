@@ -9,7 +9,7 @@ class AuthCtrl {
 
     // Redirect if user is authed:
     if (this.ProfileService.isAuthed())
-        this._$location.url('/');
+        this._$state.go('app.index');
 
   }
 
