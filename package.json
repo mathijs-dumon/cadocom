@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "reset_db": "node ./bin/reset_db"
+    "reset_db": "node ./bin/reset_db",
+    "test": "node test/runMocha"
   },
   "dependencies": {
     "angular": "^1.5.9",
@@ -41,5 +42,10 @@
     "passport-local": "^1.0.0",
     "serve-favicon": "~2.3.0",
     "vinyl-source-stream": "^1.1.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "request": "^2.79.0"
   }
 }
