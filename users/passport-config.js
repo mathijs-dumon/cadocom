@@ -6,7 +6,7 @@ var passport = require('passport');
 var User = mongoose.model('User');
 
 var LocalStrategy = require('passport-local').Strategy;
-var FacebookStrategy = require('passport-facebook').Strategy;
+//var FacebookStrategy = require('passport-facebook').Strategy;
 
 /*---------------------------------------------------------------------------------------*/
 /*                                     Serialization                                     */
@@ -66,7 +66,7 @@ passport.use('local-signup', new LocalStrategy({ passReqToCallback : true },
 /*                                    FacebookStrategy                                   */
 /*---------------------------------------------------------------------------------------*/
 
-var updateFacebookUser = function(user, profile, token, done) {
+/*var updateFacebookUser = function(user, profile, token, done) {
   user.facebook.id    = profile.id; 
   user.facebook.token = token;
   user.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
@@ -94,4 +94,4 @@ passport.use(new FacebookStrategy({
             return updateFacebookUser(new User(), profile, token, done); // no user = create & link
     });
   }
-));
+));*/
