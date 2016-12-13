@@ -49,6 +49,7 @@ gulp.task('html', function() {
 
 gulp.task('style', function() {
   return gulp.src(styleFiles)
+      .on('error', interceptErrors)
       .pipe(gulp.dest('./build/stylesheets/'));
 });
 
@@ -62,20 +63,14 @@ gulp.task('views', function() {
       .pipe(gulp.dest('./public/js/config/'));
 });
 
-// This task is used for building production ready
-// minified JS/CSS files into the dist/ folder
-gulp.task('build', ['html', 'browserify'], function() {
-  var html = gulp.src("build/index.html")
-                 .pipe(gulp.dest('./dist/'));
 
-  var js = gulp.src("build/main.js")
-               .pipe(uglify())
-               .pipe(gulp.dest('./dist/'));
-
-  return merge(html,js);
+// Groups the different things together:
+gulp.task('build', ['html', 'style', 'browserify'], function() {
+  // nothing to be done
 });
 
-gulp.task('default', ['html', 'style', 'browserify'], function() {
+// Builds & launches a server watching for changes
+gulp.task('default', ['build'], function() {
 
   browserSync.init(['./build/**/**.**'], {
     server: "./build",
@@ -90,4 +85,20 @@ gulp.task('default', ['html', 'style', 'browserify'], function() {
   gulp.watch(viewFiles, ['views']);
   gulp.watch(styleFiles, ['style']);
   gulp.watch(jsFiles, ['browserify']);
+});
+
+// Builds production ready minified JS files into the dist/ folder
+gulp.task('dist', ['build'], function() {
+  var html = gulp.src('build/index.html')
+                 .pipe(gulp.dest('./dist/'));
+
+  var css = gulp.src('./build/stylesheets/*.+(css|otf|eot|ttf|svg|woff|woff2)')
+      .on('error', interceptErrors)
+      .pipe(gulp.dest('./dist/stylesheets/'));
+
+  var js = gulp.src("build/browserifiedApp.js")
+               .pipe(uglify())
+               .pipe(gulp.dest('./dist/'));
+
+  return merge(html, css, js);
 });

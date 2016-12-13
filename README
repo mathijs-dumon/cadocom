@@ -1,8 +1,6 @@
 To install:
   npm install
 
-To launch:
-  npm start
+To launch the UI:
+  gulp
 
-To reset the databse:
-  npm run-script reset_db
