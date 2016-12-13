@@ -3,14 +3,7 @@ class AppHeaderCtrl {
     'ngInject';
 
     this.appName = AppConstants.appName;
-    this.isAuthed = ProfileService.isAuthed();
-
-    let updateHeader = () => {
-        this.isAuthed = ProfileService.isAuthed();
-    };
- 
-    $rootScope.$on('userLoggedIn', updateHeader);
-    $rootScope.$on('userLoggedOut', updateHeader);
+    
   }
 }
 

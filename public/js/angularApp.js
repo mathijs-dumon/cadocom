@@ -15,6 +15,7 @@ import './auth';
 import './gift';
 import './home';
 import './layout';
+import './components';
 import './profile';
 import './services';
 import './wish';
@@ -24,6 +25,7 @@ const requires = [
   'ui.router',
   'templates',
   'app.layout',
+  'app.components',
   'app.services',
   'app.home',
   'app.profile',
