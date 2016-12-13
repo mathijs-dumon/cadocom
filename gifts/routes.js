@@ -46,7 +46,7 @@ router.post('/wishes/create', function(req, res, next) {
   wish.save(function(err, wish){
     if (err) { return next(err); }
 
-    res.json(wish);
+    res.status(201).json(wish);
   });
 });
 

@@ -19,7 +19,7 @@ router.post('/register', function(req, res, next) {
   passport.authenticate('local-signup', function(err, user, info) {
     if (err) return next(err);
     if (user)
-      return res.json({ token: user.generateJWT() });
+      return res.json({ token: user.generateJWT(), user: user });
     else
       return res.status(401).json(info);
   })(req, res, next);
@@ -36,7 +36,7 @@ router.post('/login', function(req, res, next) {
   passport.authenticate('local-login', function(err, user, info) {
     if (err) return next(err);
     if (user)
-      return res.json({ token: user.generateJWT() });
+      return res.json({ token: user.generateJWT(), user: user });
     else
       return res.status(401).json(info);
   })(req, res, next);
