@@ -6,3 +6,6 @@ To launch:
 
 To reset the databse:
   npm run-script reset_db
+
+The server is currently running at:
+http://cadocom-server.herokuapp.com/api
