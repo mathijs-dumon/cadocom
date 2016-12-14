@@ -9,11 +9,12 @@ var rename        = require('gulp-rename');
 var templateCache = require('gulp-angular-templatecache');
 var uglify        = require('gulp-uglify');
 var merge         = require('merge-stream');
+var envify        = require('envify');
 
 // Where our files are located
-var jsFiles   = "public/js/**/*.js";
-var viewFiles = "public/views/**/*.html";
-var styleFiles = "public/stylesheets/**/*.+(css|otf|eot|ttf|svg|woff|woff2)";
+var jsFiles   = "src/js/**/*.js";
+var viewFiles = "src/views/**/*.html";
+var styleFiles = "src/stylesheets/**/*.+(css|otf|eot|ttf|svg|woff|woff2)";
 
 var interceptErrors = function(error) {
   var args = Array.prototype.slice.call(arguments);
@@ -30,7 +31,8 @@ var interceptErrors = function(error) {
 
 
 gulp.task('browserify', ['views'], function() {
-  return browserify('./public/js/angularApp.js')
+  return browserify('./src/js/angularApp.js')
+      .transform(envify()) // replaces process.env.XXX vars with their actual values
       .transform(babelify, {presets: ["es2015"]})
       .transform(ngAnnotate)
       .bundle()
@@ -42,7 +44,7 @@ gulp.task('browserify', ['views'], function() {
 });
 
 gulp.task('html', function() {
-  return gulp.src("public/index.html")
+  return gulp.src("src/index.html")
       .on('error', interceptErrors)
       .pipe(gulp.dest('./build/'));
 });
@@ -60,7 +62,7 @@ gulp.task('views', function() {
       }))
       .on('error', interceptErrors)
       .pipe(rename("app.templates.js"))
-      .pipe(gulp.dest('./public/js/config/'));
+      .pipe(gulp.dest('./src/js/config/'));
 });
 
 
@@ -81,7 +83,7 @@ gulp.task('default', ['build'], function() {
     }
   });
 
-  gulp.watch("public/index.html", ['html']);
+  gulp.watch("src/index.html", ['html']);
   gulp.watch(viewFiles, ['views']);
   gulp.watch(styleFiles, ['style']);
   gulp.watch(jsFiles, ['browserify']);

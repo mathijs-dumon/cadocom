@@ -1,6 +1,6 @@
 
 const AppConstants = {
-  api: 'http://localhost:8080/api/',
+  api: process.env.CADOCOM_API_URL || 'http://localhost:8080/api/',
   jwtKey: 'jwtToken',
   appName: 'CadoCom',
 };

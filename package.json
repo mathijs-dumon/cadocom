@@ -1,9 +1,11 @@
 {
   "name": "cadocom",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0",
   "scripts": {
     "start": "gulp"
+  },
+  "engines": {
+    "node": "4.6.2"
   },
   "dependencies": {
     "angular": "^1.5.9",
@@ -15,6 +17,7 @@
     "browserify": "^13.0.0",
     "browserify-ngannotate": "^2.0.0",
     "cookie-parser": "~1.4.3",
+    "envify": "^4.0.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
     "gulp-notify": "^2.2.0",
