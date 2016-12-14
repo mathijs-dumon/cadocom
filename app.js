@@ -12,6 +12,10 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// client is served statically under '/':
+if (process.env.LAUNCH_CLIENT)
+    app.use(express.static(process.env.CLIENT_STATIC_PATH));
+
 // Options:
 app.use(cors());
 app.use(logger('dev'));

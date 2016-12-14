@@ -7,6 +7,9 @@
     "reset_db": "node ./bin/reset_db",
     "test": "node test/runMocha"
   },
+  "engines": {
+    "node": "4.6.2"
+  },
   "dependencies": {
     "bcrypt": "^0.8.5",
     "body-parser": "~1.9.2",
