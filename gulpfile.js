@@ -9,7 +9,7 @@ var rename        = require('gulp-rename');
 var templateCache = require('gulp-angular-templatecache');
 var uglify        = require('gulp-uglify');
 var merge         = require('merge-stream');
-var envify        = require('envify');
+var envify        = require('envify/custom');
 
 // Where our files are located
 var jsFiles   = "src/js/**/*.js";
@@ -32,8 +32,8 @@ var interceptErrors = function(error) {
 
 gulp.task('browserify', ['views'], function() {
   return browserify('./src/js/angularApp.js')
-      .transform(envify()) // replaces process.env.XXX vars with their actual values
       .transform(babelify, {presets: ["es2015"]})
+      .transform(envify()) // replaces process.env.XXX vars with their actual values
       .transform(ngAnnotate)
       .bundle()
       .on('error', interceptErrors)
@@ -67,7 +67,7 @@ gulp.task('views', function() {
 
 
 // Groups the different things together:
-gulp.task('build', ['html', 'style', 'browserify'], function() {
+gulp.task('build', ['html', 'style', 'views', 'browserify'], function() {
   // nothing to be done
 });
 
@@ -90,17 +90,18 @@ gulp.task('default', ['build'], function() {
 });
 
 // Builds production ready minified JS files into the dist/ folder
-gulp.task('dist', ['build'], function() {
+gulp.task('heroku:production', ['build'], function() {
   var html = gulp.src('build/index.html')
                  .pipe(gulp.dest('./dist/'));
 
-  var css = gulp.src('./build/stylesheets/*.+(css|otf|eot|ttf|svg|woff|woff2)')
+  var css = gulp.src("build/stylesheets/**/*.+(css|otf|eot|ttf|svg|woff|woff2)")
       .on('error', interceptErrors)
       .pipe(gulp.dest('./dist/stylesheets/'));
 
   var js = gulp.src("build/browserifiedApp.js")
                .pipe(uglify())
                .pipe(gulp.dest('./dist/'));
+
 
   return merge(html, css, js);
 });

@@ -2,7 +2,7 @@
   "name": "cadocom",
   "version": "1.0.0",
   "scripts": {
-    "start": "gulp"
+    "start": "node ./bin/www"
   },
   "engines": {
     "node": "4.6.2"
@@ -27,6 +27,8 @@
     "gulp-util": "^3.0.7",
     "jwt-simple": "^0.3.1",
     "merge-stream": "^1.0.1",
+    "morgan": "^1.7.0",
+    "debug": "~2.2.0",
     "vinyl-source-stream": "^1.1.0"
   }
 }
