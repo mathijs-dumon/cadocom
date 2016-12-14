@@ -18,6 +18,7 @@
     "browserify-ngannotate": "^2.0.0",
     "cookie-parser": "~1.4.3",
     "envify": "^4.0.0",
+    "express": "^4.14.0",
     "gulp": "^3.9.1",
     "gulp-angular-templatecache": "^1.8.0",
     "gulp-notify": "^2.2.0",
