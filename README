@@ -4,3 +4,7 @@ To install:
 To launch the UI:
   gulp
 
+Client is currently hosted at:
+http://cadocom-client.herokuapp.com/
+
+! Registering has been disabled (because the login and registry page are not spam-proof - test accounts can be provided on request)
