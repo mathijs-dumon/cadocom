@@ -1,4 +1,4 @@
 module.exports = {
   'secret': 'cadocomIsNeat',
-  'database': 'mongodb://localhost/cadocom'
+  'database': (process.env.MONGODB_URI!=undefined) ? process.env.MONGODB_URI : 'mongodb://localhost/cadocom'
 };
