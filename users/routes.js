@@ -13,6 +13,9 @@ var router = express.Router()
 /*---------------------------------------------------------------------------------------*/
 
 router.post('/register', function(req, res, next) {
+  if (process.env.DISABLE_REGISTER)
+    return res.status(403).json({message: 'Registering is temporarily disabled!'});
+
   if(!req.body.username || !req.body.password)
     return res.status(400).json({message: 'Please fill out all fields'});
 
