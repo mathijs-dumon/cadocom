@@ -16,12 +16,11 @@ class AuthCtrl {
   login() {
       this.ProfileService
         .login(this._$scope.user.username, this._$scope.user.password)
-        .success(() => {
+        .then(() => {
           // No error: authentication OK
           this._$rootScope.message = 'Authentication successful!';
           this._$state.go("app.index");
-        })
-        .error(() => {
+        }, () => {
           // Error: authentication failed
           this._$rootScope.message = 'Incorrect username or password!';
           this._$state.go("app.login");
@@ -35,12 +34,11 @@ class AuthCtrl {
       } else {        
         this.ProfileService
           .register(this._$scope.user.username, this._$scope.user.password)
-          .success(() => {
+          .then(() => {
             // No error: authentication OK
             this._$rootScope.message = 'Registration successful!';
             this._$state.go("app.index");
-          })
-          .error(() => {
+          }, () => {
             // Error: authentication failed
             this._$rootScope.message = 'Registration failed!';
             this._$state.go("app.register");

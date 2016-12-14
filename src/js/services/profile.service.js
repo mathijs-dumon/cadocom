@@ -41,10 +41,9 @@ export default class ProfileService {
                 username: username,
                 password: password,
             }
-        ).success( () => {
+        ).then( () => {
             this._$rootScope.$broadcast('userLoggedIn');
-        })
-        .error( () => {
+        }, () => {
             // Error: authentication failed
             this.JwtTokenService.clearToken();
         });
@@ -61,7 +60,7 @@ export default class ProfileService {
                 username: username,
                 password: password,
             }
-        ).success( () => {
+        ).then( () => {
             this._$rootScope.$broadcast('userLoggedIn');
         });
     }
@@ -69,7 +68,7 @@ export default class ProfileService {
     unregister() {
         return this._$http.post(
             this._AppConstants.api + 'users/unregister'
-        ).succes(() => {
+        ).then(() => {
             this.logout()
         });
     }
